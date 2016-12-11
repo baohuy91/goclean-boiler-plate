@@ -1,27 +1,45 @@
 package goclean
 
 import (
-	"testing"
-	"net/http"
-	"net/http/httptest"
+	"encoding/json"
 	"github.com/gorilla/mux"
+	"goclean/infrastructure"
+	"goclean/interfaceadapter/controller"
+	mdw "goclean/interfaceadapter/middleware"
 	"goclean/interfaceadapter/repository"
 	"goclean/usecase"
-	"goclean/interfaceadapter/controller"
-	"encoding/json"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 // Sample integration to test the whole code
 func TestIntegration(t *testing.T) {
 	// re-create system
+	// Create repositories
 	userRepo := repository.NewUserRepo()
-	userUseCase := usecase.NewUserUseCase(userRepo)
-	userCtrl := controller.NewUserCtrl(userUseCase)
-	ctrl := controller.NewController(userCtrl)
+	authRepo := repository.NewAuthRepo()
 
+	// Create use case
+	userUseCase := usecase.NewUserUseCase(userRepo)
+	authUseCase := usecase.NewAuthUseCase(authRepo)
+
+	// Create controller
+	userCtrl := controller.NewUserCtrl(userUseCase)
+
+	// Create infrastructure Api response
+	response := infrastructure.ApiResponse{}
+
+	// Create middle ware
+	mdwChain := mdw.NewChain(mdw.MdwCORS, mdw.MdwLog, mdw.MdwHeader)
+	mdwToken := mdw.NewMdwToken(response, authUseCase)
+
+	// Register routes
 	router := mux.NewRouter()
-	ctrl.Register(router)
+	router.Path("/users/{userId}").Methods("GET").Handler(
+		mdwChain.Then(mdwToken.HandleFunc(userCtrl.GetUser)),
+	)
 
 	req, _ := http.NewRequest("GET", "/users/1", nil)
 	w := httptest.NewRecorder()

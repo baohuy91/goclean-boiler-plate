@@ -3,10 +3,19 @@ package repository
 import (
 	"goclean/entity"
 	"goclean/usecase"
+	"time"
 )
 
 func NewUserRepo() usecase.UserRepo {
 	return &userRepoImpl{}
+}
+
+type User struct {
+	Id string
+	Name string
+	Email string
+	CreatedTime time.Time
+	UpdatedTime time.Time
 }
 
 type userRepoImpl struct{}

@@ -1,11 +1,15 @@
-package controller
+package infrastructure
 
 import (
 	"net/http"
 	"encoding/json"
 )
 
-func Response(w http.ResponseWriter, m interface{}) {
+type ApiResponse struct {
+
+}
+
+func (a ApiResponse) Ok(w http.ResponseWriter, m interface{}) {
 	// TODO: wrap this to API response format
 	js, err := json.Marshal(m)
 	if err != nil {
@@ -16,7 +20,7 @@ func Response(w http.ResponseWriter, m interface{}) {
 	w.Write(js)
 }
 
-func ResponseError(w http.ResponseWriter, statusCode int, err error) {
+func (a ApiResponse) Error(w http.ResponseWriter, statusCode int, err error) {
 	if statusCode == http.StatusInternalServerError {
 		// Log error somewhere
 	}
