@@ -3,7 +3,6 @@ package repository
 import (
 	"goclean/entity"
 	"goclean/usecase"
-	"time"
 )
 
 func NewUserRepo() usecase.UserRepo {
@@ -11,11 +10,10 @@ func NewUserRepo() usecase.UserRepo {
 }
 
 type User struct {
-	Id string
-	Name string
+	Id    string
+	Name  string
 	Email string
-	CreatedTime time.Time
-	UpdatedTime time.Time
+	BaseModelImpl
 }
 
 type userRepoImpl struct{}

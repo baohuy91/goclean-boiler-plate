@@ -25,11 +25,11 @@ func TestIntegration(t *testing.T) {
 	userUseCase := usecase.NewUserUseCase(userRepo)
 	authUseCase := usecase.NewAuthUseCase(authRepo)
 
-	// Create controller
-	userCtrl := controller.NewUserCtrl(userUseCase)
-
 	// Create infrastructure Api response
 	response := infrastructure.ApiResponse{}
+
+	// Create controller
+	userCtrl := controller.NewUserCtrl(userUseCase, response)
 
 	// Create middle ware
 	mdwChain := mdw.NewChain(mdw.MdwCORS, mdw.MdwLog, mdw.MdwHeader)
