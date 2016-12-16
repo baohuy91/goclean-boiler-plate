@@ -1,26 +1,26 @@
 package controller
 
 import (
-	"net/http"
-	"goclean/usecase"
-	"github.com/gorilla/mux"
 	"errors"
+	"github.com/gorilla/mux"
+	"goclean/usecase"
+	"net/http"
 )
 
 type UserCtrl interface {
 	GetUser(w http.ResponseWriter, r *http.Request, uid string)
 }
 
-func NewUserCtrl(userUsecase usecase.UserUseCase, resp Response) UserCtrl{
+func NewUserCtrl(userUsecase usecase.UserUseCase, resp Response) UserCtrl {
 	return &userCtrlImpl{
 		userUsecase: userUsecase,
-		response: resp,
+		response:    resp,
 	}
 }
 
 type userCtrlImpl struct {
 	userUsecase usecase.UserUseCase
-	response Response
+	response    Response
 }
 
 func (c *userCtrlImpl) GetUser(w http.ResponseWriter, r *http.Request, uid string) {
@@ -36,7 +36,7 @@ func (c *userCtrlImpl) GetUser(w http.ResponseWriter, r *http.Request, uid strin
 
 	// Call usecase layer to get user
 	userEntity, err := c.userUsecase.GetUser(userId)
-	if err!= nil{
+	if err != nil {
 		c.response.Error(w, http.StatusInternalServerError, err)
 		return
 	}

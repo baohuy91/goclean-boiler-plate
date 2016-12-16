@@ -4,9 +4,9 @@ import (
 	"fmt"
 	rdb "github.com/dancannon/gorethink"
 	"github.com/stretchr/testify/assert"
+	"goclean/interfaceadapter/repository"
 	"testing"
 	"time"
-	"goclean/interfaceadapter/repository"
 )
 
 const (
@@ -218,33 +218,33 @@ func TestRdbHandler_GetPartOfTable(t *testing.T) {
 	assert.NoError(t, err)
 
 	dataInDB := []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(3 * time.Minute), 2, map[string][]string{})
+	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(3*time.Minute), 2, map[string][]string{})
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(4 * time.Minute), 4, map[string][]string{})
+	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(4*time.Minute), 4, map[string][]string{})
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(5 * time.Minute), 10, map[string][]string{})
+	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(5*time.Minute), 10, map[string][]string{})
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(1 * time.Minute), 10, map[string][]string{})
+	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(1*time.Minute), 10, map[string][]string{})
 	assert.Equal(t, 0, len(dataInDB))
 
 	// Error
 	panicFunc := func() {
-		dbHandler.GetPartOfTable(nil, now.Add(5 * time.Minute), 1, map[string][]string{})
+		dbHandler.GetPartOfTable(nil, now.Add(5*time.Minute), 1, map[string][]string{})
 	}
 	assert.Panics(t, panicFunc)
 
 	// Session close
 	session.Close()
-	err = dbHandler.GetPartOfTable(nil, now.Add(5 * time.Minute), 1, map[string][]string{})
+	err = dbHandler.GetPartOfTable(nil, now.Add(5*time.Minute), 1, map[string][]string{})
 	assert.Error(t, err)
 }
 

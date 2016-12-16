@@ -1,12 +1,11 @@
 package infrastructure
 
 import (
-	"net/http"
 	"encoding/json"
+	"net/http"
 )
 
 type ApiResponse struct {
-
 }
 
 func (a ApiResponse) Ok(w http.ResponseWriter, m interface{}) {

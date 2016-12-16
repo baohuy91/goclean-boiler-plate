@@ -12,9 +12,9 @@ type Chain struct {
 }
 
 // Factory function for new middleware
-func NewChain(chainFunctions...ChainFunc) Chain {
+func NewChain(chainFunctions ...ChainFunc) Chain {
 	return Chain{
-		chainFunctions:chainFunctions,
+		chainFunctions: chainFunctions,
 	}
 }
 
@@ -36,9 +36,3 @@ func (c Chain) ThenFunc(fn http.HandlerFunc) http.Handler {
 	}
 	return c.Then(fn)
 }
-
-
-
-
-
-

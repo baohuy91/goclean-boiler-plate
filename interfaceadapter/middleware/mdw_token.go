@@ -1,15 +1,14 @@
 package middleware
 
 import (
-	"github.com/dgrijalva/jwt-go"
-	"net/http"
-	"goclean/infrastructure/jwtauth"
-	"errors"
-	"goclean/usecase"
 	"encoding/json"
+	"errors"
+	"github.com/dgrijalva/jwt-go"
+	"goclean/infrastructure/jwtauth"
+	"goclean/interfaceadapter/repository"
+	"net/http"
 	"time"
 )
-
 
 // Claims store the data that we stack in the token
 type Claims struct {
@@ -75,14 +74,14 @@ func (c *Claims) Init(mapClaims jwt.MapClaims) error {
 }
 
 type MdwToken struct {
-	response    Response
-	authUseCase usecase.AuthUseCase
+	response Response
+	authRepo repository.AuthRepo
 }
 
-func NewMdwToken(response Response, authUseCase usecase.AuthUseCase) *MdwToken {
+func NewMdwToken(response Response, authRepo repository.AuthRepo) *MdwToken {
 	return &MdwToken{
-		response:response,
-		authUseCase:authUseCase,
+		response: response,
+		authRepo: authRepo,
 	}
 }
 
@@ -124,7 +123,7 @@ func (m *MdwToken) HandleFunc(ctrlFunc func(w http.ResponseWriter, r *http.Reque
 	})
 }
 
-func (m *MdwToken)signedKeyFunc(cs jwt.Claims) (interface{}, error) {
+func (m *MdwToken) signedKeyFunc(cs jwt.Claims) (interface{}, error) {
 	// Convert jwt.MapClaims to model.Claims
 	claims := Claims{}
 	err := claims.Init(cs.(jwt.MapClaims))
@@ -132,12 +131,12 @@ func (m *MdwToken)signedKeyFunc(cs jwt.Claims) (interface{}, error) {
 		return nil, err
 	}
 
-	user, err := m.authUseCase.GetAuth(claims.SubjectId)
+	auth, err := m.authRepo.Get(claims.SubjectId)
 	if err != nil {
 		return "", err
 	}
 
-	signedKey, ok := user.SignedKeys[claims.Audience]
+	signedKey, ok := auth.SignedKeys[claims.Audience]
 	if !ok {
 		return "", nil
 	}

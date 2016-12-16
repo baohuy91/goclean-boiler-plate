@@ -7,5 +7,5 @@ func MdwLog(h http.Handler) http.Handler {
 		// TODO: add code here
 		// logrus.Info(r.Method, r.RequestURI)
 		h.ServeHTTP(w, r)
-	});
+	})
 }

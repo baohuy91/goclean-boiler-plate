@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/Sirupsen/logrus"
 	rdb "github.com/dancannon/gorethink"
-	"time"
 	"goclean/interfaceadapter/repository"
+	"time"
 )
 
 type rdbHandler struct {

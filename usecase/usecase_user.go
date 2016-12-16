@@ -2,24 +2,21 @@ package usecase
 
 import (
 	"goclean/entity"
-	"errors"
 )
 
 type UserUseCase interface {
 	GetUser(id string) (*entity.User, error)
-	RegisterUserByEmail(email string, password string) (*entity.User, error)
+	CreateUser() (string, error)
 }
 
-func NewUserUseCase(userRepo UserRepo, authRepo AuthRepo) UserUseCase {
+func NewUserUseCase(userRepo UserRepo) UserUseCase {
 	return &userUseCaseImpl{
-		userRepo:userRepo,
-		authRepo:authRepo,
+		userRepo: userRepo,
 	}
 }
 
 type userUseCaseImpl struct {
 	userRepo UserRepo
-	authRepo AuthRepo
 }
 
 // Business logic for getting user will be implemented here
@@ -33,36 +30,13 @@ func (u *userUseCaseImpl) GetUser(id string) (*entity.User, error) {
 	return user, err
 }
 
-func (u *userUseCaseImpl) RegisterUserByEmail(email string, password string, salt string) (string, error) {
-	// Check if email is registered
-	user, err := u.userRepo.GetByEmail(email)
-	if err != nil {
-		return nil, err
-	}
-	if user != nil {
-		return nil, errors.New("Email is already registered")
-	}
-
+func (u *userUseCaseImpl) CreateUser() (string, error) {
 	// Create User account
-	user = &entity.User{
-		Email:email,
-		Pass: password,
-		Salt: salt,
-	}
+	// TODO: Initialize user information here
+	user := &entity.User{}
 	uid, err := u.userRepo.Create(*user)
 	if err != nil {
-		return nil, err
-	}
-
-	// Create Auth account
-	auth := &entity.Auth{
-		Uid:uid,
-		SignedKeys:map[string]entity.SignedKey{},
-	}
-	_, err = u.authRepo.Create(*auth)
-	if err != nil {
-		// TODO: in case create auth fail, remove user record
-		return nil, err
+		return "", err
 	}
 
 	return uid, nil

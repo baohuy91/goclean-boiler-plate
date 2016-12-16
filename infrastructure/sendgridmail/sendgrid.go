@@ -2,11 +2,11 @@ package sendgridmail
 
 import (
 	"errors"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
-	"strings"
 	"github.com/sendgrid/sendgrid-go"
-	"net/http"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"goclean/interfaceadapter/controller"
+	"net/http"
+	"strings"
 )
 
 type SendGridMailManager interface {
@@ -15,16 +15,16 @@ type SendGridMailManager interface {
 
 func NewSendGridMailManager(host string, endPoint string, apiKey string) SendGridMailManager {
 	return &MailManagerImpl{
-		host:        host,
-		endPoint:    endPoint,
-		apiKey:      apiKey,
+		host:     host,
+		endPoint: endPoint,
+		apiKey:   apiKey,
 	}
 }
 
 type MailManagerImpl struct {
-	host        string
-	endPoint    string
-	apiKey      string
+	host     string
+	endPoint string
+	apiKey   string
 }
 
 // Send mail that can be label as reply
@@ -69,7 +69,7 @@ func (m *MailManagerImpl) SendMail(mailObj controller.Mail) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
-		return errors.New("Request Error Status code: "+ resp.StatusCode)
+		return errors.New("Request Error Status code: " + resp.StatusCode)
 	}
 
 	return nil

@@ -11,8 +11,8 @@ type User struct {
 // Present user entity to json response
 func NewUser(ue *entity.User) *User {
 	return &User{
-		Id: ue.Id,
-		Name: ue.Name,
+		Id:    ue.Id,
+		Name:  ue.Name,
 		Email: ue.Email,
 	}
 }
