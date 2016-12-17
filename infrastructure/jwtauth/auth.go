@@ -1,76 +1,103 @@
 package jwtauth
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	jwt "github.com/dgrijalva/jwt-go"
-	"golang.org/x/crypto/sha3"
+	"time"
 )
 
-const PW_SALT_SIZE = 32
+type JwtAuth interface {
+	CreateToken(uid, aud string, nExpiredDay int, signedKey string, now time.Time) (string, error)
+	ParseToken(encryptedToken string, repoSignedKeyFunc func(uid, aud string) (string, error)) (string, error)
+}
 
-// TODO: please use lib/email to generate token
-func CreateToken(claims jwt.Claims, signedKey string) (string, error) {
+type jwtAuthImpl struct{}
+
+func NewJwtAuth() JwtAuth {
+	return &jwtAuthImpl{}
+}
+
+// Claims store the data that we stack in the token
+type Claims struct {
+	// Add more claim information if you want here
+	jwt.StandardClaims
+}
+
+// Create JWT token from uid and aud
+// uid to identify which user is this token is given to, or this token can be used to access which user
+// aud to identify which kind of client requested token, e.g. iphone 1029d, chrome 88c97,...
+// Each aud will have its own signed key, which can be revoked access by user
+func (a *jwtAuthImpl) CreateToken(uid, aud string, nExpiredDay int, signedKey string, now time.Time) (string, error) {
+	cs := Claims{
+		jwt.StandardClaims{
+			Subject:   uid,
+			Audience:  aud,
+			IssuedAt:  now.Unix(),
+			NotBefore: now.Unix(),
+			ExpiresAt: now.Unix() + int64(nExpiredDay*24*3600*1000),
+		},
+	}
+
 	// Create the token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, cs)
 
 	// Sign and get the complete encoded token as a string
 	return token.SignedString([]byte(signedKey))
 }
 
-func ParseToken(encryptedToken string, claims jwt.Claims, keyFunc func(jwt.Claims) (interface{}, error)) (jwt.Claims, error) {
+// Parse the token and check if token is valid
+// If token is not valid, return error
+// Else, return user id
+func (a *jwtAuthImpl) ParseToken(encryptedToken string, repoSignedKeyFunc func(uid, aud string) (string, error)) (string, error) {
 	parser := jwt.Parser{
 		UseJSONNumber: true,
 	}
-	token, err := parser.ParseWithClaims(encryptedToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return keyFunc(token.Claims)
-	})
-	if err != nil {
-		return nil, err
-	}
-	if !token.Valid {
-		return nil, errors.New("Token is invalid")
-	}
-	// TODO: log suspicious login
-	return token.Claims, nil
-}
 
-// Create a salt with size equal PW_SALT_SIZE
-// salt is response as a hex number
-func GenSalt() (string, error) {
-	b := make([]byte, PW_SALT_SIZE)
-	_, err := rand.Read(b)
-	if err != nil {
-		return "", nil
-	}
-	return base64.StdEncoding.EncodeToString(b), nil
-}
-
-func HashPass(pass string, salt string, authSalt string) (string, error) {
-	k, err := base64.StdEncoding.DecodeString(salt)
+	keyFunc := getSignedKeyFunc(repoSignedKeyFunc)
+	// Use default Parse func to use map claims to avoid float64 to int64 conversion in json decoding
+	token, err := parser.Parse(encryptedToken, keyFunc)
 	if err != nil {
 		return "", err
 	}
-	buf := []byte(pass)
-	// A MAC with 32 bytes of output has 256-bit security strength -- if you use at least a 32-byte-long key.
-	h := make([]byte, 32)
-	d := sha3.NewShake256()
-	// Write the key into the hash.
-	combinedSalt := append(k, []byte(authSalt)...)
-	d.Write(combinedSalt)
-	// Now write the data.
-	d.Write(buf)
-	// Read 32 bytes of output from the hash into h.
-	d.Read(h)
 
-	return base64.StdEncoding.EncodeToString(h), nil
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || token.Valid {
+		// TODO: log suspicious login
+		return "", errors.New("Token is invalid")
+	}
+
+	// Get necessary information from claims
+	uid, ok := claims["sub"].(string)
+	if !ok {
+		return "", errors.New("sub is invalid")
+	}
+
+	return uid, nil
 }
 
-func ValidatePass(pass string, hashedPass string, salt string, authSalt string) bool {
-	encoded, err := HashPass(pass, salt, authSalt)
-	if err != nil {
-		return false
+// Adapter to convert jwt signed key function to controller signed key function
+func getSignedKeyFunc(repoSignedKeyFunc func(uid, aud string) (string, error)) jwt.Keyfunc {
+	return func(token *jwt.Token) (interface{}, error) {
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			return nil, errors.New("Claim is invalid, not claim map")
+		}
+
+		// Get necessary information from claims
+		uid, ok := claims["sub"].(string)
+		if !ok {
+			return nil, errors.New("sub is invalid")
+		}
+
+		aud, ok := claims["aud"].(string)
+		if !ok {
+			return nil, errors.New("aud is invalid")
+		}
+
+		signedKey, err := repoSignedKeyFunc(uid, aud)
+		if err != nil {
+			return "", err
+		}
+		return []byte(signedKey), nil
 	}
-	return encoded == hashedPass
 }

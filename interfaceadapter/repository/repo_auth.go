@@ -2,6 +2,7 @@ package repository
 
 type AuthRepo interface {
 	Get(userId string) (*Auth, error)
+	GetByEmail(email string) (*Auth, error)
 	CreateAuthByEmailAndHashPass(uid, email, hashPash, salt string) (string, error)
 }
 
@@ -13,6 +14,11 @@ type authRepoImpl struct {
 }
 
 func (r *authRepoImpl) Get(userId string) (*Auth, error) {
+	// TODO: implement here
+	return &Auth{}, nil
+}
+
+func (r *authRepoImpl) GetByEmail(email string) (*Auth, error) {
 	// TODO: implement here
 	return &Auth{}, nil
 }

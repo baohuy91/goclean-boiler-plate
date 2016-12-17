@@ -5,6 +5,9 @@ import "time"
 type Auth struct {
 	// TODO: add confirmation here
 	Uid        string
+	Email      string
+	HashedPass string
+	Salt       string
 	SignedKeys map[string]SignedKey
 }
 

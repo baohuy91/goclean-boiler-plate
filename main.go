@@ -3,6 +3,7 @@ package goclean
 import (
 	"github.com/gorilla/mux"
 	"goclean/infrastructure"
+	"goclean/infrastructure/jwtauth"
 	"goclean/interfaceadapter/controller"
 	mdw "goclean/interfaceadapter/middleware"
 	"goclean/interfaceadapter/repository"
@@ -21,14 +22,15 @@ func main() {
 
 	// Create infrastructure Api response
 	response := infrastructure.ApiResponse{}
+	jwtAuth := jwtauth.NewJwtAuth()
 
 	// Create controller
-	userCtrl := controller.NewUserCtrl(userUseCase, response)
-	authCtrl := controller.NewAuthCtrl(userUseCase, authRepo, response)
+	userCtrl := controller.NewUserCtrl(response, userUseCase)
+	authCtrl := controller.NewAuthCtrl(response, userUseCase, authRepo, jwtAuth)
 
 	// Create middle ware
 	mdwChain := mdw.NewChain(mdw.MdwCORS, mdw.MdwLog, mdw.MdwHeader)
-	mdwToken := mdw.NewMdwToken(response, authRepo)
+	mdwToken := mdw.NewMdwToken(response, authRepo, jwtAuth)
 
 	// Register routes
 	r := mux.NewRouter()

@@ -1,87 +1,28 @@
 package middleware
 
 import (
-	"encoding/json"
 	"errors"
-	"github.com/dgrijalva/jwt-go"
-	"goclean/infrastructure/jwtauth"
 	"goclean/interfaceadapter/repository"
 	"net/http"
 	"time"
 )
 
-// Claims store the data that we stack in the token
-type Claims struct {
-	SubjectId string `json:"sid,omitempty"`
-	Email     string `json:"email,omitempty"`
-	jwt.StandardClaims
-}
-
-func (c *Claims) InitStandardClaims(day int64) {
-	now := time.Now().Unix()
-	c.StandardClaims = jwt.StandardClaims{
-		IssuedAt:  now,
-		NotBefore: now,
-		ExpiresAt: now + (day * 24 * 3600 * 1000),
-	}
-}
-
-func (c *Claims) Init(mapClaims jwt.MapClaims) error {
-	assertOk := false
-	if sid, ok := mapClaims["sid"]; ok {
-		c.SubjectId, assertOk = sid.(string)
-		if !assertOk {
-			//logrus.Debug("assertOk==false for sid")
-		}
-	}
-	if email, ok := mapClaims["email"]; ok {
-		c.Email, assertOk = email.(string)
-		if !assertOk {
-			//logrus.Debug("assertOk==false for email")
-		}
-	}
-	if aud, ok := mapClaims["aud"]; ok {
-		c.Audience, assertOk = aud.(string)
-		if !assertOk {
-			//logrus.Debug("assertOk==false for aud")
-		}
-	}
-	if nbf, ok := mapClaims["nbf"]; ok {
-		notBefore, assertOk := nbf.(json.Number)
-		c.NotBefore, _ = notBefore.Int64()
-		if !assertOk {
-			//logrus.Debug("assertOk==false for nbf, type:", reflect.TypeOf(nbf))
-		}
-	}
-	if iat, ok := mapClaims["iat"]; ok {
-		issuedAt, assertOk := iat.(json.Number)
-		c.IssuedAt, _ = issuedAt.Int64()
-		if !assertOk {
-			//logrus.Debug("assertOk==false for iat")
-		}
-	}
-	if exp, ok := mapClaims["exp"]; ok {
-		expiresAt, assertOk := exp.(json.Number)
-		c.ExpiresAt, _ = expiresAt.Int64()
-		if !assertOk {
-			//logrus.Debug("assertOk==false for exp")
-		}
-	}
-	if !assertOk {
-		return errors.New("Can't convert jwt.MapClaims to model.Claims")
-	}
-	return nil
-}
-
 type MdwToken struct {
 	response Response
 	authRepo repository.AuthRepo
+	jwtAuth  JwtAuth
 }
 
-func NewMdwToken(response Response, authRepo repository.AuthRepo) *MdwToken {
+type JwtAuth interface {
+	CreateToken(uid, aud string, nExpiredDay int, signedKey string, now time.Time) (string, error)
+	ParseToken(encryptedToken string, repoSignedKeyFunc func(uid, aud string) (string, error)) (string, error)
+}
+
+func NewMdwToken(response Response, authRepo repository.AuthRepo, jwtAuth JwtAuth) *MdwToken {
 	return &MdwToken{
 		response: response,
 		authRepo: authRepo,
+		jwtAuth:  jwtAuth,
 	}
 }
 
@@ -92,53 +33,35 @@ func (m *MdwToken) HandleFunc(ctrlFunc func(w http.ResponseWriter, r *http.Reque
 		return
 
 		authorization := r.Header.Get("Authorization")
+		// Remove "Bearer "
 		if len(authorization) <= 8 {
 			m.response.Error(w, http.StatusBadRequest, errors.New("Invalid token"))
 			return
 		}
-
 		token := authorization[7:]
 
 		// parse token, use map claims to avoid float64 to int64 conversion in json decoding
-		cs, err := jwtauth.ParseToken(token, jwt.MapClaims{}, m.signedKeyFunc)
+		uid, err := m.jwtAuth.ParseToken(token, m.signedKeyFunc)
 		if err != nil {
-			m.response.Error(w, http.StatusBadRequest, err)
-			return
-		}
-		// Convert jwt.MapClaims to model.Claims
-		claims := Claims{}
-		err = claims.Init(cs.(jwt.MapClaims))
-		if err != nil {
-			m.response.Error(w, http.StatusBadRequest, err)
+			m.response.Error(w, http.StatusUnauthorized, errors.New("Token expired or invalid"))
 			return
 		}
 
-		// authenticate
-		if claims.Valid() != nil {
-			m.response.Error(w, http.StatusUnauthorized, errors.New("Token expired"))
-			return
-		}
-
-		ctrlFunc(w, r, claims.SubjectId)
+		ctrlFunc(w, r, uid)
 	})
 }
 
-func (m *MdwToken) signedKeyFunc(cs jwt.Claims) (interface{}, error) {
+func (m *MdwToken) signedKeyFunc(uid, aud string) (string, error) {
 	// Convert jwt.MapClaims to model.Claims
-	claims := Claims{}
-	err := claims.Init(cs.(jwt.MapClaims))
-	if err != nil {
-		return nil, err
-	}
-
-	auth, err := m.authRepo.Get(claims.SubjectId)
+	auth, err := m.authRepo.Get(uid)
 	if err != nil {
 		return "", err
 	}
 
-	signedKey, ok := auth.SignedKeys[claims.Audience]
+	signedKey, ok := auth.SignedKeys[aud]
 	if !ok {
 		return "", nil
 	}
-	return []byte(signedKey.Key), nil
+
+	return signedKey.Key, nil
 }

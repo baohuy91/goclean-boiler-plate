@@ -11,7 +11,7 @@ type UserCtrl interface {
 	GetUser(w http.ResponseWriter, r *http.Request, uid string)
 }
 
-func NewUserCtrl(userUsecase usecase.UserUseCase, resp Response) UserCtrl {
+func NewUserCtrl(resp Response, userUsecase usecase.UserUseCase) UserCtrl {
 	return &userCtrlImpl{
 		userUsecase: userUsecase,
 		response:    resp,

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"goclean/infrastructure"
+	"goclean/infrastructure/jwtauth"
 	"goclean/interfaceadapter/controller"
 	mdw "goclean/interfaceadapter/middleware"
 	"goclean/interfaceadapter/repository"
@@ -23,17 +24,17 @@ func TestIntegration(t *testing.T) {
 
 	// Create use case
 	userUseCase := usecase.NewUserUseCase(userRepo)
-	authUseCase := usecase.NewAuthUseCase(authRepo)
 
 	// Create infrastructure Api response
 	response := infrastructure.ApiResponse{}
+	jwtAuth := jwtauth.NewJwtAuth()
 
 	// Create controller
-	userCtrl := controller.NewUserCtrl(userUseCase, response)
+	userCtrl := controller.NewUserCtrl(response, userUseCase)
 
 	// Create middle ware
 	mdwChain := mdw.NewChain(mdw.MdwCORS, mdw.MdwLog, mdw.MdwHeader)
-	mdwToken := mdw.NewMdwToken(response, authUseCase)
+	mdwToken := mdw.NewMdwToken(response, authRepo, jwtAuth)
 
 	// Register routes
 	router := mux.NewRouter()
