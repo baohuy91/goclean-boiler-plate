@@ -27,14 +27,14 @@ type Claims struct {
 // uid to identify which user is this token is given to, or this token can be used to access which user
 // aud to identify which kind of client requested token, e.g. iphone 1029d, chrome 88c97,...
 // Each aud will have its own signed key, which can be revoked access by user
-func (a *jwtAuthImpl) CreateToken(uid, aud string, nExpiredDay int, signedKey string, now time.Time) (string, error) {
+func (a *jwtAuthImpl) CreateToken(uid, aud string, nExpiredMinute int, signedKey string, now time.Time) (string, error) {
 	cs := Claims{
 		jwt.StandardClaims{
 			Subject:   uid,
 			Audience:  aud,
 			IssuedAt:  now.Unix(),
 			NotBefore: now.Unix(),
-			ExpiresAt: now.Unix() + int64(nExpiredDay*24*3600),
+			ExpiresAt: now.Unix() + int64(nExpiredMinute*60),
 		},
 	}
 

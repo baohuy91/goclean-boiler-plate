@@ -15,7 +15,9 @@ import (
 
 const AUTH_SALT = "xKuma-Stackx"
 const PW_SALT_SIZE = 32
-const DEFAULT_TOKEN_EXPIRED_DAY = 30
+const DEFAULT_TOKEN_EXPIRED_MINUTE = 30 * 24 * 60 // 30 days
+const RESET_TOKEN_EXPIRED_MINUTE = 30             // 30 minutes
+const RESET_PASS_AUD = "resetPassAud"
 
 type AuthCtrl interface {
 	LoginByEmail(w http.ResponseWriter, r *http.Request)
@@ -27,12 +29,13 @@ type JwtAuth interface {
 	ParseToken(encryptedToken string, repoSignedKeyFunc func(uid, aud string) (string, error)) (string, error)
 }
 
-func NewAuthCtrl(resp Response, userUseCase usecase.UserUseCase, authRepo repository.AuthRepo, jwtAuth JwtAuth) AuthCtrl {
+func NewAuthCtrl(resp Response, userUseCase usecase.UserUseCase, authRepo repository.AuthRepo, jwtAuth JwtAuth, mailManager MailManager) AuthCtrl {
 	return &authCtrlImpl{
 		userUseCase: userUseCase,
 		response:    resp,
 		authRepo:    authRepo,
 		jwtAuth:     jwtAuth,
+		mailManager: mailManager,
 	}
 }
 
@@ -41,6 +44,7 @@ type authCtrlImpl struct {
 	authRepo    repository.AuthRepo
 	response    Response
 	jwtAuth     JwtAuth
+	mailManager MailManager
 }
 
 type registerByMailReq struct {
@@ -137,7 +141,7 @@ func (c *authCtrlImpl) LoginByEmail(w http.ResponseWriter, r *http.Request) {
 	// Gen token and response
 	signedKey := GenSalt()
 
-	token, err := c.jwtAuth.CreateToken(auth.Uid, aud, DEFAULT_TOKEN_EXPIRED_DAY, signedKey, time.Now())
+	token, err := c.jwtAuth.CreateToken(auth.Uid, aud, DEFAULT_TOKEN_EXPIRED_MINUTE, signedKey, time.Now())
 	if err != nil {
 		c.response.Error(w, http.StatusInternalServerError, err)
 		return
@@ -152,6 +156,59 @@ func (c *authCtrlImpl) LoginByEmail(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Return token
 	c.response.Ok(w, token)
+}
+
+func (c *authCtrlImpl) RequestResetPassword(w http.ResponseWriter, r *http.Request) {
+	// Read body
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		c.response.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	req := struct {
+		email string `json:"email"`
+	}{}
+	err = json.Unmarshal(body, &req)
+	if err != nil {
+		c.response.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// Get auth
+	auth, err := c.authRepo.GetByEmail(req.email)
+	if err != nil {
+		c.response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	if auth == nil {
+		// Response ok even user is not exist to prevent privacy leak
+		c.response.Ok(w, "")
+		return
+	}
+
+	// Gen token and response
+	signedKey := GenSalt()
+	resetToken, err := c.jwtAuth.CreateToken(auth.Uid, RESET_PASS_AUD, RESET_TOKEN_EXPIRED_MINUTE, signedKey, time.Now())
+	if err != nil {
+		c.response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Save signed key to database
+	err = c.authRepo.SaveSignedKey(auth.Uid, RESET_PASS_AUD, signedKey)
+	if err != nil {
+		c.response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// TODO: send mail to user
+	c.mailManager.SendMail(Mail{
+		ToList:  []string{auth.Email},
+		Content: resetToken,
+	})
+
+	// TODO: response data later
+	c.response.Ok(w, "")
 }
 
 // Create a salt with size equal PW_SALT_SIZE

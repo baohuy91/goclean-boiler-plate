@@ -32,7 +32,7 @@ func TestIntegration(t *testing.T) {
 	// Create controller
 	userCtrl := controller.NewUserCtrl(response, userUseCase)
 
-	// Create middle ware
+	// Create middleware
 	mdwChain := mdw.NewChain(mdw.MdwCORS, mdw.MdwLog, mdw.MdwHeader)
 	mdwToken := mdw.NewMdwToken(response, authRepo, jwtAuth)
 
