@@ -51,6 +51,7 @@ type registerByMailReq struct {
 type loginByEmailReq struct {
 	email string `json:"email"`
 	pass  string `json:"pass"`
+	aud   string `json:"aud"`
 }
 
 func (c *authCtrlImpl) RegisterByMail(w http.ResponseWriter, r *http.Request) {
@@ -111,6 +112,12 @@ func (c *authCtrlImpl) LoginByEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: validation
+	aud := req.aud
+	if aud == "" {
+		aud = "defaultAud"
+	}
+
 	auth, err := c.authRepo.GetByEmail(req.email)
 	if err != nil {
 		c.response.Error(w, http.StatusInternalServerError, err)
@@ -129,7 +136,15 @@ func (c *authCtrlImpl) LoginByEmail(w http.ResponseWriter, r *http.Request) {
 
 	// Gen token and response
 	signedKey := GenSalt()
-	token, err := c.jwtAuth.CreateToken(auth.Uid, "", DEFAULT_TOKEN_EXPIRED_DAY, signedKey, time.Now())
+
+	token, err := c.jwtAuth.CreateToken(auth.Uid, aud, DEFAULT_TOKEN_EXPIRED_DAY, signedKey, time.Now())
+	if err != nil {
+		c.response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Save signed key
+	err = c.authRepo.SaveSignedKey(auth.Uid, aud, signedKey)
 	if err != nil {
 		c.response.Error(w, http.StatusInternalServerError, err)
 		return
