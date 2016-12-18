@@ -34,7 +34,7 @@ func (a *jwtAuthImpl) CreateToken(uid, aud string, nExpiredDay int, signedKey st
 			Audience:  aud,
 			IssuedAt:  now.Unix(),
 			NotBefore: now.Unix(),
-			ExpiresAt: now.Unix() + int64(nExpiredDay*24*3600*1000),
+			ExpiresAt: now.Unix() + int64(nExpiredDay*24*3600),
 		},
 	}
 
@@ -61,7 +61,7 @@ func (a *jwtAuthImpl) ParseToken(encryptedToken string, repoSignedKeyFunc func(u
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || token.Valid {
+	if !ok || !token.Valid {
 		// TODO: log suspicious login
 		return "", errors.New("Token is invalid")
 	}
