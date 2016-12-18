@@ -22,6 +22,8 @@ const RESET_PASS_AUD = "resetPassAud"
 type AuthCtrl interface {
 	LoginByEmail(w http.ResponseWriter, r *http.Request)
 	RegisterByMail(w http.ResponseWriter, r *http.Request)
+	RequestResetPassword(w http.ResponseWriter, r *http.Request)
+	ResetPassword(w http.ResponseWriter, r *http.Request)
 }
 
 type JwtAuth interface {
@@ -208,6 +210,64 @@ func (c *authCtrlImpl) RequestResetPassword(w http.ResponseWriter, r *http.Reque
 	})
 
 	// TODO: response data later
+	c.response.Ok(w, "")
+}
+
+func (c *authCtrlImpl) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	// Read body
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		c.response.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	req := struct {
+		pass       string `json:"pass"`
+		resetToken string `json:"resetToken"`
+	}{}
+	err = json.Unmarshal(body, &req)
+	if err != nil {
+		c.response.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	uid, err := c.jwtAuth.ParseToken(req.resetToken, func(uid, aud string) (string, error) {
+		auth, err := c.authRepo.Get(uid)
+		if err != nil {
+			return "", err
+		}
+		// Only accept reset password aud
+		signedKey, ok := auth.SignedKeys[RESET_PASS_AUD]
+		if !ok {
+			return "", nil
+		}
+
+		return signedKey.Key, nil
+	})
+	if err != nil {
+		c.response.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// Get auth
+	auth, err := c.authRepo.Get(uid)
+	if err != nil {
+		c.response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	// Hash new pass
+	auth.HashedPass, err = HashPass(req.pass, auth.Salt, AUTH_SALT)
+	if err != nil {
+		c.response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	// Update
+	err = c.authRepo.Update(*auth)
+	if err != nil {
+		c.response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// TODO: response data
 	c.response.Ok(w, "")
 }
 

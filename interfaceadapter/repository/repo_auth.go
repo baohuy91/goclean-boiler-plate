@@ -4,6 +4,7 @@ type AuthRepo interface {
 	Get(userId string) (*Auth, error)
 	GetByEmail(email string) (*Auth, error)
 	CreateAuthByEmailAndHashPass(uid, email, hashPash, salt string) (string, error)
+	Update(auth Auth) error
 	// Create or update signed key for user "uid" and at key "aud"
 	SaveSignedKey(uid, aud, signedKey string) error
 }
@@ -28,6 +29,10 @@ func (r *authRepoImpl) GetByEmail(email string) (*Auth, error) {
 func (r *authRepoImpl) CreateAuthByEmailAndHashPass(uid, email, hashPash, salt string) (string, error) {
 	// TODO: implement here
 	return "", nil
+}
+
+func (r *authRepoImpl) Update(auth Auth) error {
+	return nil
 }
 
 func (r *authRepoImpl) SaveSignedKey(uid, aud, signedKey string) error {
