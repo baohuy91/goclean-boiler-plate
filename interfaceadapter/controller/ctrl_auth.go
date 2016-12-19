@@ -31,10 +31,9 @@ type JwtAuth interface {
 	ParseToken(encryptedToken string, repoSignedKeyFunc func(uid, aud string) (string, error)) (string, error)
 }
 
-func NewAuthCtrl(resp Response, userUseCase usecase.UserUseCase, authRepo repository.AuthRepo, jwtAuth JwtAuth, mailManager MailManager) AuthCtrl {
+func NewAuthCtrl(userUseCase usecase.UserUseCase, authRepo repository.AuthRepo, jwtAuth JwtAuth, mailManager MailManager) AuthCtrl {
 	return &authCtrlImpl{
 		userUseCase: userUseCase,
-		response:    resp,
 		authRepo:    authRepo,
 		jwtAuth:     jwtAuth,
 		mailManager: mailManager,
@@ -44,7 +43,6 @@ func NewAuthCtrl(resp Response, userUseCase usecase.UserUseCase, authRepo reposi
 type authCtrlImpl struct {
 	userUseCase usecase.UserUseCase
 	authRepo    repository.AuthRepo
-	response    Response
 	jwtAuth     JwtAuth
 	mailManager MailManager
 }
@@ -64,13 +62,13 @@ func (c *authCtrlImpl) RegisterByMail(w http.ResponseWriter, r *http.Request) {
 	// Read body
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		c.response.Error(w, http.StatusBadRequest, err)
+		ResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 	req := registerByMailReq{}
 	err = json.Unmarshal(body, &req)
 	if err != nil {
-		c.response.Error(w, http.StatusBadRequest, err)
+		ResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -79,42 +77,54 @@ func (c *authCtrlImpl) RegisterByMail(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate password strength
 
+	// Check if auth exist
+	auth, err := c.authRepo.GetByEmail(req.email)
+	if err != nil {
+		ResponseError(w, http.StatusInternalServerError, err)
+		return
+	}
+	if auth != nil {
+		ResponseError(w, http.StatusBadRequest, errors.New("Email is used"))
+		return
+	}
+
 	// TODO: Generate HashedPass & Salt
 	salt := GenSalt()
 	hashedPass, err := HashPass(req.pass, salt, AUTH_SALT)
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	// Create a user
 	userId, err := c.userUseCase.CreateUser()
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	// Create an auth data
 	_, err = c.authRepo.CreateAuthByEmailAndHashPass(userId, req.email, hashedPass, salt)
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	// TODO: return body response here
-	c.response.Ok(w, "")
+	ResponseOk(w, "")
 }
 
 func (c *authCtrlImpl) LoginByEmail(w http.ResponseWriter, r *http.Request) {
 	// Read body
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		c.response.Error(w, http.StatusBadRequest, err)
+		ResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 	req := loginByEmailReq{}
 	err = json.Unmarshal(body, &req)
 	if err != nil {
-		c.response.Error(w, http.StatusBadRequest, err)
+		ResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -126,17 +136,17 @@ func (c *authCtrlImpl) LoginByEmail(w http.ResponseWriter, r *http.Request) {
 
 	auth, err := c.authRepo.GetByEmail(req.email)
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 	if auth == nil {
-		c.response.Error(w, http.StatusNotFound, errors.New("No Auth record"))
+		ResponseError(w, http.StatusNotFound, errors.New("No Auth record"))
 		return
 	}
 
 	// Validate pass
 	if ValidatePass(req.pass, auth.HashedPass, auth.Salt, AUTH_SALT) {
-		c.response.Error(w, http.StatusBadRequest, errors.New("Incorrect username & pass"))
+		ResponseError(w, http.StatusBadRequest, errors.New("Incorrect username & pass"))
 		return
 	}
 
@@ -145,26 +155,26 @@ func (c *authCtrlImpl) LoginByEmail(w http.ResponseWriter, r *http.Request) {
 
 	token, err := c.jwtAuth.CreateToken(auth.Uid, aud, DEFAULT_TOKEN_EXPIRED_MINUTE, signedKey, time.Now())
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	// Save signed key
 	err = c.authRepo.SaveSignedKey(auth.Uid, aud, signedKey)
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	// TODO: Return token
-	c.response.Ok(w, token)
+	ResponseOk(w, token)
 }
 
 func (c *authCtrlImpl) RequestResetPassword(w http.ResponseWriter, r *http.Request) {
 	// Read body
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		c.response.Error(w, http.StatusBadRequest, err)
+		ResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 	req := struct {
@@ -172,19 +182,19 @@ func (c *authCtrlImpl) RequestResetPassword(w http.ResponseWriter, r *http.Reque
 	}{}
 	err = json.Unmarshal(body, &req)
 	if err != nil {
-		c.response.Error(w, http.StatusBadRequest, err)
+		ResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	// Get auth
 	auth, err := c.authRepo.GetByEmail(req.email)
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 	if auth == nil {
 		// Response ok even user is not exist to prevent privacy leak
-		c.response.Ok(w, "")
+		ResponseOk(w, "")
 		return
 	}
 
@@ -192,14 +202,14 @@ func (c *authCtrlImpl) RequestResetPassword(w http.ResponseWriter, r *http.Reque
 	signedKey := GenSalt()
 	resetToken, err := c.jwtAuth.CreateToken(auth.Uid, RESET_PASS_AUD, RESET_TOKEN_EXPIRED_MINUTE, signedKey, time.Now())
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	// Save signed key to database
 	err = c.authRepo.SaveSignedKey(auth.Uid, RESET_PASS_AUD, signedKey)
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -210,14 +220,14 @@ func (c *authCtrlImpl) RequestResetPassword(w http.ResponseWriter, r *http.Reque
 	})
 
 	// TODO: response data later
-	c.response.Ok(w, "")
+	ResponseOk(w, "")
 }
 
 func (c *authCtrlImpl) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	// Read body
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		c.response.Error(w, http.StatusBadRequest, err)
+		ResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 	req := struct {
@@ -226,7 +236,7 @@ func (c *authCtrlImpl) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}{}
 	err = json.Unmarshal(body, &req)
 	if err != nil {
-		c.response.Error(w, http.StatusBadRequest, err)
+		ResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -244,31 +254,31 @@ func (c *authCtrlImpl) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return signedKey.Key, nil
 	})
 	if err != nil {
-		c.response.Error(w, http.StatusBadRequest, err)
+		ResponseError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	// Get auth
 	auth, err := c.authRepo.Get(uid)
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 	// Hash new pass
 	auth.HashedPass, err = HashPass(req.pass, auth.Salt, AUTH_SALT)
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 	// Update
 	err = c.authRepo.Update(*auth)
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	// TODO: response data
-	c.response.Ok(w, "")
+	ResponseOk(w, "")
 }
 
 // Create a salt with size equal PW_SALT_SIZE

@@ -5,6 +5,7 @@ import (
 	rdb "github.com/dancannon/gorethink"
 	"github.com/stretchr/testify/assert"
 	"goclean/interfaceadapter/repository"
+	"os"
 	"testing"
 	"time"
 )
@@ -13,10 +14,6 @@ const (
 	t_DB_NAME = "unit_test"
 	t_TB_NAME = "t_common_test"
 )
-
-func init() {
-	initDB()
-}
 
 func initDB() {
 	// TODO: pass these in env
@@ -71,12 +68,26 @@ func t_connect() *rdb.Session {
 	return sess
 }
 
+func TestMain(m *testing.M) {
+	if !testing.Short() {
+		// Initialize Rethinkdb database to test
+		// Keep init code here to shorten testing time
+		initDB()
+	}
+	code := m.Run()
+	os.Exit(code)
+}
+
 type DataStruct struct {
 	Data string `gorethink:"data"`
 	repository.BaseModelImpl
 }
 
 func TestRdbHandler_Create(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skip TestRdbHandler_Create")
+	}
+
 	session := t_connect()
 	defer session.Close()
 	dbHandler := rdbHandler{
@@ -106,6 +117,10 @@ func TestRdbHandler_Create(t *testing.T) {
 }
 
 func TestRdbHandler_Get(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skip TestRdbHandler_Get")
+	}
+
 	session := t_connect()
 	defer session.Close()
 	dbHandler := rdbHandler{
@@ -142,6 +157,10 @@ func TestRdbHandler_Get(t *testing.T) {
 }
 
 func TestRdbHandler_GetList(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skip TestRdbHandler_GetList")
+	}
+
 	session := t_connect()
 	dbHandler := rdbHandler{
 		session:   session,
@@ -194,6 +213,10 @@ func TestRdbHandler_GetList(t *testing.T) {
 }
 
 func TestRdbHandler_GetPartOfTable(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skip TestRdbHandler_GetPartOfTable")
+	}
+
 	session := t_connect()
 	defer session.Close()
 	dbHandler := rdbHandler{
@@ -249,6 +272,10 @@ func TestRdbHandler_GetPartOfTable(t *testing.T) {
 }
 
 func TestRdbHandler_Update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skip TestRdbHandler_Update")
+	}
+
 	session := t_connect()
 	defer session.Close()
 	dbHandler := rdbHandler{
@@ -287,6 +314,10 @@ func TestRdbHandler_Update(t *testing.T) {
 }
 
 func TestRdbHandler_Delete(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skip TestRdbHandler_Delete")
+	}
+
 	session := t_connect()
 	defer session.Close()
 	dbHandler := rdbHandler{

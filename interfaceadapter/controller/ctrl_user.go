@@ -11,16 +11,14 @@ type UserCtrl interface {
 	GetUser(w http.ResponseWriter, r *http.Request, uid string)
 }
 
-func NewUserCtrl(resp Response, userUsecase usecase.UserUseCase) UserCtrl {
+func NewUserCtrl(userUsecase usecase.UserUseCase) UserCtrl {
 	return &userCtrlImpl{
 		userUsecase: userUsecase,
-		response:    resp,
 	}
 }
 
 type userCtrlImpl struct {
 	userUsecase usecase.UserUseCase
-	response    Response
 }
 
 func (c *userCtrlImpl) GetUser(w http.ResponseWriter, r *http.Request, uid string) {
@@ -30,19 +28,19 @@ func (c *userCtrlImpl) GetUser(w http.ResponseWriter, r *http.Request, uid strin
 
 	// Validate request data
 	if !ok || userId == "" {
-		c.response.Error(w, http.StatusBadRequest, errors.New("missing userId"))
+		ResponseError(w, http.StatusBadRequest, errors.New("missing userId"))
 		return
 	}
 
 	// Call usecase layer to get user
 	userEntity, err := c.userUsecase.GetUser(userId)
 	if err != nil {
-		c.response.Error(w, http.StatusInternalServerError, err)
+		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	// Convert entity data to the new one that we will response to API
 	userPresenter := NewUser(userEntity)
 
-	c.response.Ok(w, userPresenter)
+	ResponseOk(w, userPresenter)
 }

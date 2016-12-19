@@ -2,7 +2,6 @@ package goclean
 
 import (
 	"github.com/gorilla/mux"
-	"goclean/infrastructure"
 	"goclean/infrastructure/jwtauth"
 	"goclean/infrastructure/sendgridmail"
 	"goclean/interfaceadapter/controller"
@@ -21,19 +20,17 @@ func main() {
 	// Create use case
 	userUseCase := usecase.NewUserUseCase(userRepo)
 
-	// Create infrastructure Api response
-	response := infrastructure.ApiResponse{}
 	jwtAuth := jwtauth.NewJwtAuth()
 	// Get these info from config file and add here
 	mailManager := sendgridmail.NewSendGridMailManager("host", "endpoint", "apikey")
 
 	// Create controller
-	userCtrl := controller.NewUserCtrl(response, userUseCase)
-	authCtrl := controller.NewAuthCtrl(response, userUseCase, authRepo, jwtAuth, mailManager)
+	userCtrl := controller.NewUserCtrl(userUseCase)
+	authCtrl := controller.NewAuthCtrl(userUseCase, authRepo, jwtAuth, mailManager)
 
 	// Create middle ware
 	mdwChain := mdw.NewChain(mdw.MdwCORS, mdw.MdwLog, mdw.MdwHeader)
-	mdwToken := mdw.NewMdwToken(response, authRepo, jwtAuth)
+	mdwToken := mdw.NewMdwToken(authRepo, jwtAuth)
 
 	// Register routes
 	r := mux.NewRouter()

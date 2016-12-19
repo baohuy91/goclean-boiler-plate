@@ -8,7 +8,6 @@ import (
 )
 
 type MdwToken struct {
-	response Response
 	authRepo repository.AuthRepo
 	jwtAuth  JwtAuth
 }
@@ -18,9 +17,8 @@ type JwtAuth interface {
 	ParseToken(encryptedToken string, repoSignedKeyFunc func(uid, aud string) (string, error)) (string, error)
 }
 
-func NewMdwToken(response Response, authRepo repository.AuthRepo, jwtAuth JwtAuth) *MdwToken {
+func NewMdwToken(authRepo repository.AuthRepo, jwtAuth JwtAuth) *MdwToken {
 	return &MdwToken{
-		response: response,
 		authRepo: authRepo,
 		jwtAuth:  jwtAuth,
 	}
@@ -35,7 +33,7 @@ func (m *MdwToken) HandleFunc(ctrlFunc func(w http.ResponseWriter, r *http.Reque
 		authorization := r.Header.Get("Authorization")
 		// Remove "Bearer "
 		if len(authorization) <= 8 {
-			m.response.Error(w, http.StatusBadRequest, errors.New("Invalid token"))
+			ResponseError(w, http.StatusBadRequest, errors.New("Invalid token"))
 			return
 		}
 		token := authorization[7:]
@@ -43,7 +41,7 @@ func (m *MdwToken) HandleFunc(ctrlFunc func(w http.ResponseWriter, r *http.Reque
 		// parse token, use map claims to avoid float64 to int64 conversion in json decoding
 		uid, err := m.jwtAuth.ParseToken(token, m.signedKeyFunc)
 		if err != nil {
-			m.response.Error(w, http.StatusUnauthorized, errors.New("Token expired or invalid"))
+			ResponseError(w, http.StatusUnauthorized, errors.New("Token expired or invalid"))
 			return
 		}
 
