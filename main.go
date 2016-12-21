@@ -37,6 +37,15 @@ func main() {
 	r.Path("/auth/registerbyemail").Methods("POST").Handler(
 		mdwChain.Then(http.HandlerFunc(authCtrl.RegisterByMail)),
 	)
+	r.Path("/auth/login").Methods("POST").Handler(
+		mdwChain.Then(http.HandlerFunc(authCtrl.LoginByEmail)),
+	)
+	r.Path("/auth/reqresetpass").Methods("POST").Handler(
+		mdwChain.Then(http.HandlerFunc(authCtrl.RequestResetPassword)),
+	)
+	r.Path("/auth/resetpass").Methods("POST").Handler(
+		mdwChain.Then(http.HandlerFunc(authCtrl.ResetPassword)),
+	)
 	r.Path("/users/{userId}").Methods("GET").Handler(
 		mdwChain.Then(mdwToken.HandleFunc(userCtrl.GetUser)),
 	)
