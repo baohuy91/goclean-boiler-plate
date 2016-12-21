@@ -26,10 +26,6 @@ func NewMdwToken(authRepo repository.AuthRepo, jwtAuth JwtAuth) *MdwToken {
 
 func (m *MdwToken) HandleFunc(ctrlFunc func(w http.ResponseWriter, r *http.Request, uid string)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: remove this
-		ctrlFunc(w, r, "1")
-		return
-
 		authorization := r.Header.Get("Authorization")
 		// Remove "Bearer "
 		if len(authorization) <= 8 {
