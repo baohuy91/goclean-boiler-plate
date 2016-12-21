@@ -2,8 +2,18 @@ package middleware
 
 import "net/http"
 
+type MdwCORS interface {
+	ChainFunc(handler http.Handler) http.Handler
+}
+
+func NewMdwCORS() MdwCORS {
+	return &mdwCORSImpl{}
+}
+
+type mdwCORSImpl struct{}
+
 // Handle CORS request fow API for client
-func MdwCORS(handler http.Handler) http.Handler {
+func (m *mdwCORSImpl) ChainFunc(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if origin := r.Header.Get("Origin"); origin != "" {
 			w.Header().Set("Access-Control-Allow-Origin", origin)

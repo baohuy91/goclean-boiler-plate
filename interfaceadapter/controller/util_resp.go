@@ -18,7 +18,7 @@ func ResponseOk(w http.ResponseWriter, m interface{}) {
 
 func ResponseError(w http.ResponseWriter, statusCode int, err error) {
 	if statusCode == http.StatusInternalServerError {
-		// TODO: Log error somewhere
+
 	}
 	w.WriteHeader(statusCode)
 }

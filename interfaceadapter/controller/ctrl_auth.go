@@ -31,7 +31,12 @@ type JwtAuth interface {
 	ParseToken(encryptedToken string, repoSignedKeyFunc func(uid, aud string) (string, error)) (string, error)
 }
 
-func NewAuthCtrl(userUseCase usecase.UserUseCase, authRepo repository.AuthRepo, jwtAuth JwtAuth, mailManager MailManager) AuthCtrl {
+func NewAuthCtrl(
+	userUseCase usecase.UserUseCase,
+	authRepo repository.AuthRepo,
+	jwtAuth JwtAuth,
+	mailManager MailManager,
+) AuthCtrl {
 	return &authCtrlImpl{
 		userUseCase: userUseCase,
 		authRepo:    authRepo,
@@ -75,7 +80,7 @@ func (c *authCtrlImpl) RegisterByMail(w http.ResponseWriter, r *http.Request) {
 	// Validate data
 	// TODO: validate email format
 
-	// TODO: validate password strength
+	// TODO: password should be hashed before sending to server
 
 	// Check if auth exist
 	auth, err := c.authRepo.GetByEmail(req.email)
