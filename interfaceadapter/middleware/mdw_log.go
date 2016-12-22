@@ -1,6 +1,9 @@
 package middleware
 
 import (
+	"context"
+	"crypto/rand"
+	"fmt"
 	"goclean/interfaceadapter"
 	"net/http"
 )
@@ -32,8 +35,16 @@ type mdwLogImpl struct {
 
 func (m *mdwLogImpl) ChainFunc(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Log request with request Id from client or generate a new one
+		reqId := r.Header.Get("X-Request-ID")
+		if reqId == "" {
+			reqId = generateRandomID()
+		}
+		r.WithContext(context.WithValue(r.Context(), "requestId", reqId))
+
 		// Log request
 		m.logger.LogWithFields(map[string]interface{}{
+			"requestId":  reqId,
 			"method":     r.Method,
 			"requestUri": r.RequestURI,
 		}, "Request")
@@ -43,8 +54,18 @@ func (m *mdwLogImpl) ChainFunc(h http.Handler) http.Handler {
 
 		// Log response
 		m.logger.LogWithFields(map[string]interface{}{
+			"requestId":  reqId,
 			"httpStatus": rW.status,
-			"requestUri": r.RequestURI,
 		}, "Reponse")
 	})
+}
+
+func generateRandomID() string {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		return ""
+	}
+
+	return fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }

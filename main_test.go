@@ -3,6 +3,7 @@ package goclean
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"goclean/infrastructure"
 	"goclean/infrastructure/jwtauth"
 	"goclean/interfaceadapter/controller"
 	mdw "goclean/interfaceadapter/middleware"
@@ -35,7 +36,10 @@ func TestIntegration(t *testing.T) {
 	userCtrl := controller.NewUserCtrl(userUseCase)
 
 	// Create middleware
-	mdwChain := mdw.NewChain(mdw.MdwCORS, mdw.MdwLog, mdw.MdwHeader)
+	mdwLog := mdw.NewMdwLog(infrastructure.NewLogger())
+	mdwHeader := mdw.NewMdwHeader()
+	mdwCORS := mdw.NewMdwCORS()
+	mdwChain := mdw.NewChain(mdwCORS.ChainFunc, mdwLog.ChainFunc, mdwHeader.ChainFunc)
 	mdwToken := mdw.NewMdwToken(authRepo, jwtAuth)
 
 	// Register routes

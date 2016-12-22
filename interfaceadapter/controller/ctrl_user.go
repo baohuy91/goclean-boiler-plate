@@ -38,6 +38,10 @@ func (c *userCtrlImpl) GetUser(w http.ResponseWriter, r *http.Request, uid strin
 		ResponseError(w, http.StatusInternalServerError, err)
 		return
 	}
+	if userEntity == nil {
+		ResponseError(w, http.StatusNotFound, errors.New("User not found"))
+		return
+	}
 
 	// Convert entity data to the new one that we will response to API
 	userPresenter := NewUser(userEntity)
