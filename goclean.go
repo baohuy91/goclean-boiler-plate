@@ -1,8 +1,7 @@
-package goclean
+package main
 
 import (
 	"github.com/gorilla/mux"
-	"goclean/infrastructure"
 	"goclean/infrastructure/jwtauth"
 	"goclean/infrastructure/sendgridmail"
 	"goclean/interfaceadapter/controller"
@@ -30,10 +29,9 @@ func main() {
 	authCtrl := controller.NewAuthCtrl(userUseCase, authRepo, jwtAuth, mailManager)
 
 	// Create middle ware
-	mdwLog := mdw.NewMdwLog(infrastructure.NewLogger())
 	mdwHeader := mdw.NewMdwHeader()
 	mdwCORS := mdw.NewMdwCORS()
-	mdwChain := mdw.NewChain(mdwCORS.ChainFunc, mdwLog.ChainFunc, mdwHeader.ChainFunc)
+	mdwChain := mdw.NewChain(mdwCORS.ChainFunc, mdwHeader.ChainFunc)
 	mdwToken := mdw.NewMdwToken(authRepo, jwtAuth)
 
 	// Register routes
@@ -50,6 +48,8 @@ func main() {
 	r.Path("/auth/resetpass").Methods("POST").Handler(
 		mdwChain.Then(http.HandlerFunc(authCtrl.ResetPassword)),
 	)
+
+	// Need authorization
 	r.Path("/users/{userId}").Methods("GET").Handler(
 		mdwChain.Then(mdwToken.HandleFunc(userCtrl.GetUser)),
 	)

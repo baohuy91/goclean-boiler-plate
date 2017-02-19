@@ -1,4 +1,4 @@
-package goclean
+package main
 
 import (
 	"encoding/json"
