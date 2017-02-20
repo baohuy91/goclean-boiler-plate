@@ -8,6 +8,7 @@ import (
 	"net/http"
 )
 
+// TODO: Working in progress
 type MdwLog interface {
 	ChainFunc(h http.Handler) http.Handler
 }
@@ -43,20 +44,20 @@ func (m *mdwLogImpl) ChainFunc(h http.Handler) http.Handler {
 		r.WithContext(context.WithValue(r.Context(), "requestId", reqId))
 
 		// Log request
-		m.logger.LogWithFields(map[string]interface{}{
-			"requestId":  reqId,
-			"method":     r.Method,
-			"requestUri": r.RequestURI,
-		}, "Request")
+		//m.logger.LogWithFields(map[string]interface{}{
+		//	"requestId":  reqId,
+		//	"method":     r.Method,
+		//	"requestUri": r.RequestURI,
+		//}, "Request")
 
-		rW := &writerWrapper{-1, w}
-		h.ServeHTTP(rW, r)
+		//rW := &writerWrapper{-1, w}
+		h.ServeHTTP(w, r)
 
 		// Log response
-		m.logger.LogWithFields(map[string]interface{}{
-			"requestId":  reqId,
-			"httpStatus": rW.status,
-		}, "Reponse")
+		//m.logger.LogWithFields(map[string]interface{}{
+		//	"requestId":  reqId,
+		//	"httpStatus": rW.status,
+		//}, "Reponse")
 	})
 }
 
