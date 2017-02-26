@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"goclean/adapter/controller"
 	mdw "goclean/adapter/middleware"
@@ -54,7 +55,11 @@ func main() {
 		mdwChain.Then(mdwToken.HandleFunc(userCtrl.GetUser)),
 	)
 
+	fmt.Println("Listen & serve on localhost:8080")
 	// Start handle request
 	http.Handle("/", r)
-	http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

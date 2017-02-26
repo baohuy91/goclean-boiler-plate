@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"net/http"
+	"github.com/Sirupsen/logrus"
 )
 
 func ResponseOk(w http.ResponseWriter, m interface{}) {
@@ -18,7 +19,9 @@ func ResponseOk(w http.ResponseWriter, m interface{}) {
 
 func ResponseError(w http.ResponseWriter, statusCode int, err error) {
 	if statusCode == http.StatusInternalServerError {
-
+		logrus.Error(err);
+	} else {
+		logrus.Debug(err);
 	}
 	w.WriteHeader(statusCode)
 }

@@ -84,9 +84,7 @@ type DataStruct struct {
 }
 
 func TestRdbHandler_Create(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skip TestRdbHandler_Create")
-	}
+	t.Skip("Skip TestRdbHandler_Create")
 
 	session := t_connect()
 	defer session.Close()
@@ -117,9 +115,7 @@ func TestRdbHandler_Create(t *testing.T) {
 }
 
 func TestRdbHandler_Get(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skip TestRdbHandler_Get")
-	}
+	t.Skip("Skip TestRdbHandler_Get")
 
 	session := t_connect()
 	defer session.Close()
@@ -157,9 +153,7 @@ func TestRdbHandler_Get(t *testing.T) {
 }
 
 func TestRdbHandler_GetList(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skip TestRdbHandler_GetList")
-	}
+	t.Skip("Skip TestRdbHandler_GetList")
 
 	session := t_connect()
 	dbHandler := rdbHandler{
@@ -213,9 +207,7 @@ func TestRdbHandler_GetList(t *testing.T) {
 }
 
 func TestRdbHandler_GetPartOfTable(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skip TestRdbHandler_GetPartOfTable")
-	}
+	t.Skip("Skip TestRdbHandler_GetPartOfTable")
 
 	session := t_connect()
 	defer session.Close()
@@ -241,40 +233,38 @@ func TestRdbHandler_GetPartOfTable(t *testing.T) {
 	assert.NoError(t, err)
 
 	dataInDB := []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(3*time.Minute), 2, map[string][]string{})
+	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(3 * time.Minute), 2, map[string][]string{})
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(4*time.Minute), 4, map[string][]string{})
+	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(4 * time.Minute), 4, map[string][]string{})
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(5*time.Minute), 10, map[string][]string{})
+	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(5 * time.Minute), 10, map[string][]string{})
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(1*time.Minute), 10, map[string][]string{})
+	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(1 * time.Minute), 10, map[string][]string{})
 	assert.Equal(t, 0, len(dataInDB))
 
 	// Error
 	panicFunc := func() {
-		dbHandler.GetPartOfTable(nil, now.Add(5*time.Minute), 1, map[string][]string{})
+		dbHandler.GetPartOfTable(nil, now.Add(5 * time.Minute), 1, map[string][]string{})
 	}
 	assert.Panics(t, panicFunc)
 
 	// Session close
 	session.Close()
-	err = dbHandler.GetPartOfTable(nil, now.Add(5*time.Minute), 1, map[string][]string{})
+	err = dbHandler.GetPartOfTable(nil, now.Add(5 * time.Minute), 1, map[string][]string{})
 	assert.Error(t, err)
 }
 
 func TestRdbHandler_Update(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skip TestRdbHandler_Update")
-	}
+	t.Skip("Skip TestRdbHandler_Update")
 
 	session := t_connect()
 	defer session.Close()
@@ -314,9 +304,7 @@ func TestRdbHandler_Update(t *testing.T) {
 }
 
 func TestRdbHandler_Delete(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skip TestRdbHandler_Delete")
-	}
+	t.Skip("Skip TestRdbHandler_Delete")
 
 	session := t_connect()
 	defer session.Close()
