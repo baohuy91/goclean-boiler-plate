@@ -2,7 +2,7 @@ package repository
 
 import (
 	"goclean/entity"
-	"goclean/usecase"
+	"goclean/usecase/adapter"
 )
 
 func NewUserRepo() usecase.UserRepo {

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"goclean/entity"
+	adapter "goclean/usecase/adapter"
 )
 
 type UserUseCase interface {
@@ -9,14 +10,14 @@ type UserUseCase interface {
 	CreateUser() (string, error)
 }
 
-func NewUserUseCase(userRepo UserRepo) UserUseCase {
+func NewUserUseCase(userRepo adapter.UserRepo) UserUseCase {
 	return &userUseCaseImpl{
 		userRepo: userRepo,
 	}
 }
 
 type userUseCaseImpl struct {
-	userRepo UserRepo
+	userRepo adapter.UserRepo
 }
 
 // Business logic for getting user will be implemented here

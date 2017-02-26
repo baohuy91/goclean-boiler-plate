@@ -2,11 +2,11 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"goclean/infrastructure/jwtauth"
-	"goclean/infrastructure/sendgridmail"
 	"goclean/adapter/controller"
 	mdw "goclean/adapter/middleware"
 	"goclean/adapter/repository"
+	"goclean/infrastructure/jwtauth"
+	"goclean/infrastructure/sendgridmail"
 	"goclean/usecase"
 	"net/http"
 )
