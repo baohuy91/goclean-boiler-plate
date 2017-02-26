@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
-	"goclean/interfaceadapter/controller"
+	"goclean/adapter/controller"
 	"net/http"
 	"strings"
 )

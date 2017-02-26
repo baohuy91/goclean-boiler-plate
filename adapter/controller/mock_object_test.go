@@ -2,7 +2,7 @@ package controller
 
 import (
 	"goclean/entity"
-	"goclean/interfaceadapter/repository"
+	"goclean/adapter/repository"
 )
 
 // All dependent interface mock will go here

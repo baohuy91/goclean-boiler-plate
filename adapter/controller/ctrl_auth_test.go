@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"goclean/interfaceadapter/repository"
+	"goclean/adapter/repository"
 	"net/http"
 	"net/http/httptest"
 	"os"

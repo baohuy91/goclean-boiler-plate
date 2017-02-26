@@ -4,9 +4,9 @@ import (
 	"github.com/gorilla/mux"
 	"goclean/infrastructure/jwtauth"
 	"goclean/infrastructure/sendgridmail"
-	"goclean/interfaceadapter/controller"
-	mdw "goclean/interfaceadapter/middleware"
-	"goclean/interfaceadapter/repository"
+	"goclean/adapter/controller"
+	mdw "goclean/adapter/middleware"
+	"goclean/adapter/repository"
 	"goclean/usecase"
 	"net/http"
 )

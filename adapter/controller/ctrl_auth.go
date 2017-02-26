@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"goclean/interfaceadapter/repository"
+	"goclean/adapter/repository"
 	"goclean/usecase"
 	"golang.org/x/crypto/sha3"
 	"io/ioutil"

@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"errors"
-	"goclean/interfaceadapter/repository"
+	"goclean/adapter/repository"
 	"net/http"
 	"time"
 )

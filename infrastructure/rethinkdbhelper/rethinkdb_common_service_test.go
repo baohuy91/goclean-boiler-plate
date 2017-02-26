@@ -4,7 +4,7 @@ import (
 	"fmt"
 	rdb "github.com/dancannon/gorethink"
 	"github.com/stretchr/testify/assert"
-	"goclean/interfaceadapter/repository"
+	"goclean/adapter/repository"
 	"os"
 	"testing"
 	"time"

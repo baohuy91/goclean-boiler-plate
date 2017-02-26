@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/Sirupsen/logrus"
 	rdb "github.com/dancannon/gorethink"
-	"goclean/interfaceadapter/repository"
+	"goclean/adapter/repository"
 	"time"
 )
 

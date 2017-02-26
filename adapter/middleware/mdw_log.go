@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"goclean/interfaceadapter"
+	"goclean/adapter"
 	"net/http"
 )
 
@@ -13,7 +13,7 @@ type MdwLog interface {
 	ChainFunc(h http.Handler) http.Handler
 }
 
-func NewMdwLog(logger interfaceadapter.Logger) MdwLog {
+func NewMdwLog(logger adapter.Logger) MdwLog {
 	return &mdwLogImpl{
 		logger: logger,
 	}
@@ -31,7 +31,7 @@ func (w *writerWrapper) WriteHeader(statusCode int) {
 }
 
 type mdwLogImpl struct {
-	logger interfaceadapter.Logger
+	logger adapter.Logger
 }
 
 func (m *mdwLogImpl) ChainFunc(h http.Handler) http.Handler {
