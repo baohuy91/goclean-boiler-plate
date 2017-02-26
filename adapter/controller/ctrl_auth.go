@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"goclean/adapter/mail"
 	"goclean/adapter/repository"
 	"goclean/usecase"
 	"golang.org/x/crypto/sha3"
@@ -26,6 +27,7 @@ type AuthCtrl interface {
 	ResetPassword(w http.ResponseWriter, r *http.Request)
 }
 
+// Interface for Infrastructure to implement the Jwt support module
 type JwtAuth interface {
 	CreateToken(uid, aud string, nExpiredDay int, signedKey string, now time.Time) (string, error)
 	ParseToken(encryptedToken string, repoSignedKeyFunc func(uid, aud string) (string, error)) (string, error)
@@ -35,7 +37,7 @@ func NewAuthCtrl(
 	userUseCase usecase.UserUseCase,
 	authRepo repository.AuthRepo,
 	jwtAuth JwtAuth,
-	mailManager MailManager,
+	mailManager mail.MailManager,
 ) AuthCtrl {
 	return &authCtrlImpl{
 		userUseCase: userUseCase,
@@ -49,7 +51,7 @@ type authCtrlImpl struct {
 	userUseCase usecase.UserUseCase
 	authRepo    repository.AuthRepo
 	jwtAuth     JwtAuth
-	mailManager MailManager
+	mailManager mail.MailManager
 }
 
 type registerByMailReq struct {
@@ -219,10 +221,8 @@ func (c *authCtrlImpl) RequestResetPassword(w http.ResponseWriter, r *http.Reque
 	}
 
 	// TODO: send mail to user
-	c.mailManager.SendMail(Mail{
-		ToList:  []string{auth.Email},
-		Content: resetToken,
-	})
+	mailBuilder := mail.NewBuilder(resetToken, auth.Email)
+	c.mailManager.SendMail(mailBuilder.Build())
 
 	// TODO: response data later
 	ResponseOk(w, "")

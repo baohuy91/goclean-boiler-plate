@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
-	"goclean/adapter/controller"
+	mailAdapter "goclean/adapter/mail"
 	"net/http"
 	"strings"
 )
 
 type SendGridMailManager interface {
-	SendMail(mail controller.Mail) error
+	SendMail(mail mailAdapter.Mail) error
 }
 
 func NewSendGridMailManager(host string, endPoint string, apiKey string) SendGridMailManager {
@@ -29,26 +29,26 @@ type MailManagerImpl struct {
 }
 
 // Send mail that can be label as reply
-func (m *MailManagerImpl) SendMail(mailObj controller.Mail) error {
-	if len(mailObj.ToList) == 0 {
+func (m *MailManagerImpl) SendMail(mailObj mailAdapter.Mail) error {
+	if len(mailObj.ToList()) == 0 {
 		return errors.New("TO list can not be null")
 	}
 	toList := []*mail.Email{}
-	for _, address := range mailObj.ToList {
+	for _, address := range mailObj.ToList() {
 		toList = append(toList, mail.NewEmail("", address))
 	}
 
 	ccList := []*mail.Email{}
-	for _, address := range mailObj.CCList {
+	for _, address := range mailObj.CCList() {
 		ccList = append(ccList, mail.NewEmail("", address))
 	}
 
 	// SendGrid mail body
 	sgMail := mail.NewV3Mail()
-	sgMail.SetFrom(mail.NewEmail("", mailObj.From))
-	sgMail.AddContent(mail.NewContent("text/plain", mailObj.Content))
-	sgMail.Categories = append(sgMail.Categories, mailObj.Categories...)
-	for k, arg := range mailObj.CustomArgs {
+	sgMail.SetFrom(mail.NewEmail("", mailObj.From()))
+	sgMail.AddContent(mail.NewContent("text/plain", mailObj.Content()))
+	sgMail.Categories = append(sgMail.Categories, mailObj.Categories()...)
+	for k, arg := range mailObj.CustomArgs() {
 		sgMail.SetCustomArg(k, arg)
 	}
 
@@ -56,9 +56,9 @@ func (m *MailManagerImpl) SendMail(mailObj controller.Mail) error {
 	p := mail.NewPersonalization()
 	p.AddTos(toList...)
 	p.AddCCs(ccList...)
-	p.SetHeader("In-Reply-To:", mailObj.InReplyTo)
-	p.SetHeader("References:", strings.Join(mailObj.ReferenceIds, " "))
-	p.Subject = mailObj.Subject
+	p.SetHeader("In-Reply-To:", mailObj.InReplyTo())
+	p.SetHeader("References:", strings.Join(mailObj.ReferenceIds(), " "))
+	p.Subject = mailObj.Subject()
 	sgMail.AddPersonalizations(p)
 
 	request := sendgrid.GetRequest(m.apiKey, m.endPoint, m.host)

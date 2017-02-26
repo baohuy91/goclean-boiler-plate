@@ -1,8 +1,9 @@
 package controller
 
 import (
-	"goclean/entity"
+	mailAdapter "goclean/adapter/mail"
 	"goclean/adapter/repository"
+	"goclean/entity"
 )
 
 // All dependent interface mock will go here
@@ -62,4 +63,15 @@ func (u *userUseCaseMock) CreateUser() (string, error) {
 		return u.createUserFunc()
 	}
 	return "", nil
+}
+
+type MailManagerMock struct {
+	sendMailFunc func() error
+}
+
+func (m *MailManagerMock) SendMail(mail mailAdapter.Mail) error {
+	if m.sendMailFunc != nil {
+		return m.sendMailFunc()
+	}
+	return nil
 }
