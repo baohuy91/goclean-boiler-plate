@@ -3,6 +3,7 @@ package middleware
 import (
 	"errors"
 	"goclean/adapter/repository"
+	"goclean/adapter/web"
 	"net/http"
 	"time"
 )
@@ -29,7 +30,7 @@ func (m *MdwToken) HandleFunc(ctrlFunc func(w http.ResponseWriter, r *http.Reque
 		authorization := r.Header.Get("Authorization")
 		// Remove "Bearer "
 		if len(authorization) <= 8 {
-			ResponseError(w, http.StatusBadRequest, errors.New("Invalid token"))
+			web.ResponseError(w, http.StatusBadRequest, errors.New("Invalid token"))
 			return
 		}
 		token := authorization[7:]
@@ -37,7 +38,7 @@ func (m *MdwToken) HandleFunc(ctrlFunc func(w http.ResponseWriter, r *http.Reque
 		// parse token, use map claims to avoid float64 to int64 conversion in json decoding
 		uid, err := m.jwtAuth.ParseToken(token, m.signedKeyFunc)
 		if err != nil {
-			ResponseError(w, http.StatusUnauthorized, errors.New("Token expired or invalid"))
+			web.ResponseError(w, http.StatusUnauthorized, errors.New("Token expired or invalid"))
 			return
 		}
 

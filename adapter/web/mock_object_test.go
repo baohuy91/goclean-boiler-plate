@@ -1,9 +1,8 @@
-package controller
+package web
 
 import (
-	mailAdapter "goclean/adapter/mail"
 	"goclean/adapter/repository"
-	"goclean/entity"
+	"goclean/domain"
 )
 
 // All dependent interface mock will go here
@@ -48,11 +47,11 @@ func (r *authRepoMock) SaveSignedKey(uid, aud, signedKey string) error {
 }
 
 type userUseCaseMock struct {
-	getUserFunc    func() (*entity.User, error)
+	getUserFunc    func() (*domain.User, error)
 	createUserFunc func() (string, error)
 }
 
-func (u *userUseCaseMock) GetUser(id string) (*entity.User, error) {
+func (u *userUseCaseMock) GetUser(id string) (*domain.User, error) {
 	if u.getUserFunc != nil {
 		return u.getUserFunc()
 	}
@@ -65,11 +64,11 @@ func (u *userUseCaseMock) CreateUser() (string, error) {
 	return "", nil
 }
 
-type MailManagerMock struct {
+type MailServiceMock struct {
 	sendMailFunc func() error
 }
 
-func (m *MailManagerMock) SendMail(mail mailAdapter.Mail) error {
+func (m *MailServiceMock) SendMail(msg string, uid string) error {
 	if m.sendMailFunc != nil {
 		return m.sendMailFunc()
 	}

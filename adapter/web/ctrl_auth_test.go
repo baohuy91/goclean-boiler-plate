@@ -1,4 +1,4 @@
-package controller
+package web
 
 import (
 	"bytes"
@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 	tAuthCtrlImpl = &authCtrlImpl{
 		jwtAuth:     &jwtAuthMock{},
 		authRepo:    &authRepoMock{},
-		mailManager: &MailManagerMock{},
+		mailService: &MailServiceMock{},
 		userUseCase: &userUseCaseMock{},
 	}
 

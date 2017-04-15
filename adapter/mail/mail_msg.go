@@ -1,7 +1,7 @@
 package mail
 
-// Mail struct that content message to feed to mail client to be sent away
-type Mail interface {
+// MailMsg struct that content message to feed to mail client to be sent away
+type MailMsg interface {
 	From() string
 	ToList() []string
 	CCList() []string
@@ -13,7 +13,7 @@ type Mail interface {
 	ReferenceIds() []string
 }
 
-type mailImpl struct {
+type mailMsgImpl struct {
 	from         string
 	toList       []string
 	ccList       []string
@@ -25,36 +25,36 @@ type mailImpl struct {
 	referenceIds []string
 }
 
-func (m mailImpl) From() string {
+func (m mailMsgImpl) From() string {
 	return m.from
 }
 
-func (m mailImpl) ToList() []string {
+func (m mailMsgImpl) ToList() []string {
 	return m.toList
 }
 
-func (m mailImpl) CCList() []string {
+func (m mailMsgImpl) CCList() []string {
 	return m.ccList
 }
 
-func (m mailImpl) Subject() string {
+func (m mailMsgImpl) Subject() string {
 	return m.subject
 }
 
-func (m mailImpl) Content() string {
+func (m mailMsgImpl) Content() string {
 	return m.content
 }
 
-func (m mailImpl) CustomArgs() map[string]string {
+func (m mailMsgImpl) CustomArgs() map[string]string {
 	return m.customArgs
 }
 
-func (m mailImpl) Categories() []string {
+func (m mailMsgImpl) Categories() []string {
 	return m.categories
 }
-func (m mailImpl) InReplyTo() string {
+func (m mailMsgImpl) InReplyTo() string {
 	return m.inReplyTo
 }
-func (m mailImpl) ReferenceIds() []string {
+func (m mailMsgImpl) ReferenceIds() []string {
 	return m.referenceIds
 }

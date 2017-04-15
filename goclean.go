@@ -3,11 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"goclean/adapter/controller"
+	"goclean/adapter/mail"
 	mdw "goclean/adapter/middleware"
 	"goclean/adapter/repository"
-	"goclean/infrastructure/jwtauth"
-	"goclean/infrastructure/sendgridmail"
+	"goclean/adapter/web"
+	"goclean/infrastructure/jwt"
+	"goclean/infrastructure/sendgrid"
 	"goclean/usecase"
 	"net/http"
 )
@@ -21,15 +22,16 @@ func main() {
 	// Create use case
 	userUseCase := usecase.NewUserUseCase(userRepo)
 
-	jwtAuth := jwtauth.NewJwtAuth()
+	jwtAuth := jwt.NewJwtAuth()
 	// Get these info from config file and add here
-	mailManager := sendgridmail.NewSendGridMailManager("host", "endpoint", "apikey")
+	mailClient := sendgrid.NewSendGridMailGateway("host", "endpoint", "apikey")
+	mailService := mail.NewMailService(mailClient)
 
 	// Create controller
-	userCtrl := controller.NewUserCtrl(userUseCase)
-	authCtrl := controller.NewAuthCtrl(userUseCase, authRepo, jwtAuth, mailManager)
+	userCtrl := web.NewUserCtrl(userUseCase)
+	authCtrl := web.NewAuthCtrl(userUseCase, authRepo, jwtAuth, mailService)
 
-	// Create middle ware
+	// Create middleware
 	mdwHeader := mdw.NewMdwHeader()
 	mdwCORS := mdw.NewMdwCORS()
 	mdwChain := mdw.NewChain(mdwCORS.ChainFunc, mdwHeader.ChainFunc)
