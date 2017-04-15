@@ -1,7 +1,6 @@
-package controller
+package web
 
 import (
-	mailAdapter "goclean/adapter/mail"
 	"goclean/adapter/repository"
 	"goclean/domain"
 )
@@ -65,11 +64,11 @@ func (u *userUseCaseMock) CreateUser() (string, error) {
 	return "", nil
 }
 
-type MailManagerMock struct {
+type MailServiceMock struct {
 	sendMailFunc func() error
 }
 
-func (m *MailManagerMock) SendMail(mail mailAdapter.Mail) error {
+func (m *MailServiceMock) SendMail(msg string, uid string) error {
 	if m.sendMailFunc != nil {
 		return m.sendMailFunc()
 	}

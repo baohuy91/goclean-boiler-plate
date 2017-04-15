@@ -1,4 +1,4 @@
-package sendgridmail
+package sendgrid
 
 import (
 	"errors"
@@ -10,26 +10,22 @@ import (
 	"strings"
 )
 
-type SendGridMailManager interface {
-	SendMail(mail mailAdapter.Mail) error
-}
-
-func NewSendGridMailManager(host string, endPoint string, apiKey string) SendGridMailManager {
-	return &MailManagerImpl{
+func NewSendGridMailGateway(host string, endPoint string, apiKey string) mailAdapter.MailGateway {
+	return &mailGatewayImpl{
 		host:     host,
 		endPoint: endPoint,
 		apiKey:   apiKey,
 	}
 }
 
-type MailManagerImpl struct {
+type mailGatewayImpl struct {
 	host     string
 	endPoint string
 	apiKey   string
 }
 
 // Send mail that can be label as reply
-func (m *MailManagerImpl) SendMail(mailObj mailAdapter.Mail) error {
+func (m *mailGatewayImpl) SendMail(mailObj mailAdapter.MailMsg) error {
 	if len(mailObj.ToList()) == 0 {
 		return errors.New("TO list can not be null")
 	}

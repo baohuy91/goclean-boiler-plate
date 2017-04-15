@@ -1,10 +1,9 @@
-package controller
+package web
 
 import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"goclean/adapter/mail"
 	"goclean/adapter/repository"
 	"goclean/usecase"
 	"golang.org/x/crypto/sha3"
@@ -37,13 +36,13 @@ func NewAuthCtrl(
 	userUseCase usecase.UserUseCase,
 	authRepo repository.AuthRepo,
 	jwtAuth JwtAuth,
-	mailManager mail.MailManager,
+	mailService usecase.MailService,
 ) AuthCtrl {
 	return &authCtrlImpl{
 		userUseCase: userUseCase,
 		authRepo:    authRepo,
 		jwtAuth:     jwtAuth,
-		mailManager: mailManager,
+		mailService: mailService,
 	}
 }
 
@@ -51,7 +50,7 @@ type authCtrlImpl struct {
 	userUseCase usecase.UserUseCase
 	authRepo    repository.AuthRepo
 	jwtAuth     JwtAuth
-	mailManager mail.MailManager
+	mailService usecase.MailService
 }
 
 type registerByMailReq struct {
@@ -221,8 +220,7 @@ func (c *authCtrlImpl) RequestResetPassword(w http.ResponseWriter, r *http.Reque
 	}
 
 	// TODO: send mail to user
-	mailBuilder := mail.NewBuilder(resetToken, auth.Email)
-	c.mailManager.SendMail(mailBuilder.Build())
+	c.mailService.SendMail(resetToken, auth.Uid)
 
 	// TODO: response data later
 	ResponseOk(w, "")

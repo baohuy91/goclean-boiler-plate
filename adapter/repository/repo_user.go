@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"goclean/entity"
-	"goclean/usecase/adapter"
+	"goclean/domain"
+	"goclean/usecase"
 )
 
 func NewUserRepo() usecase.UserRepo {
@@ -15,29 +15,29 @@ type User struct {
 	Email string
 	Pass  string
 	Salt  string
-	BaseModelImpl
+	CommonModelImpl
 }
 
 type userRepoImpl struct{}
 
-func (r *userRepoImpl) Get(id string) (*entity.User, error) {
+func (r *userRepoImpl) Get(id string) (*domain.User, error) {
 	// TODO: call database
-	user := &entity.User{
+	user := &domain.User{
 		Id: id,
 	}
 	return user, nil
 }
 
-func (r *userRepoImpl) GetByEmail(email string) (*entity.User, error) {
+func (r *userRepoImpl) GetByEmail(email string) (*domain.User, error) {
 	// TODO: call database
-	user := &entity.User{
+	user := &domain.User{
 		Id:    "123",
 		Email: email,
 	}
 	return user, nil
 }
 
-func (r *userRepoImpl) Create(user entity.User) (string, error) {
+func (r *userRepoImpl) Create(user domain.User) (string, error) {
 	// TODO: call database
 	userModel := &User{
 		Id:    "123",
