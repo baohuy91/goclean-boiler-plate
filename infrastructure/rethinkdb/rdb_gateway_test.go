@@ -88,7 +88,7 @@ func TestRdbHandler_Create(t *testing.T) {
 
 	session := t_connect()
 	defer session.Close()
-	dbHandler := rdbGateway{
+	dbGateway := rdbGateway{
 		session:   session,
 		TableName: t_TB_NAME,
 	}
@@ -99,11 +99,11 @@ func TestRdbHandler_Create(t *testing.T) {
 	now := time.Now()
 	data.CreatedTime = now
 
-	id, err := dbHandler.Create(&data)
+	id, err := dbGateway.Create(&data)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, id)
 
-	resp, err := rdb.Table(t_TB_NAME).Get(id).Run(dbHandler.session)
+	resp, err := rdb.Table(t_TB_NAME).Get(id).Run(dbGateway.session)
 	assert.NoError(t, err)
 	defer resp.Close()
 
@@ -156,7 +156,7 @@ func TestRdbHandler_GetList(t *testing.T) {
 	t.Skip("Skip TestRdbHandler_GetList")
 
 	session := t_connect()
-	dbHandler := rdbGateway{
+	dbGateway := rdbGateway{
 		session:   session,
 		TableName: t_TB_NAME,
 	}
@@ -169,40 +169,40 @@ func TestRdbHandler_GetList(t *testing.T) {
 	now := time.Now()
 	data.CreatedTime = now
 
-	_, err := rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbHandler.session)
-	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbHandler.session)
-	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbHandler.session)
-	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbHandler.session)
+	_, err := rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbGateway.session)
+	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbGateway.session)
+	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbGateway.session)
+	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbGateway.session)
 	assert.NoError(t, err)
 
 	dataInDB := []*DataStruct{}
-	err = dbHandler.GetList(&dataInDB, "createdTime", now)
+	err = dbGateway.GetList(&dataInDB, "createdTime", now)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetList(&dataInDB, "createdTime", now.AddDate(0, 0, 1))
+	err = dbGateway.GetList(&dataInDB, "createdTime", now.AddDate(0, 0, 1))
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetList(&dataInDB, "createdTime", "abc")
+	err = dbGateway.GetList(&dataInDB, "createdTime", "abc")
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetList(&dataInDB, "not_a_index", now)
+	err = dbGateway.GetList(&dataInDB, "not_a_index", now)
 	assert.Error(t, err)
 
 	// Error
 	panicFunc := func() {
-		dbHandler.GetList(nil, "createdTime", now)
+		dbGateway.GetList(nil, "createdTime", now)
 	}
 	assert.Panics(t, panicFunc)
 
 	// Session close
 	session.Close()
-	err = dbHandler.GetList(&dataInDB, "createdTime", now)
+	err = dbGateway.GetList(&dataInDB, "createdTime", now)
 	assert.Error(t, err)
 }
 
@@ -211,7 +211,7 @@ func TestRdbHandler_GetPartOfTable(t *testing.T) {
 
 	session := t_connect()
 	defer session.Close()
-	dbHandler := rdbGateway{
+	dbGateway := rdbGateway{
 		session:   session,
 		TableName: t_TB_NAME,
 	}
@@ -223,43 +223,43 @@ func TestRdbHandler_GetPartOfTable(t *testing.T) {
 	}
 	now := time.Date(2016, 7, 6, 10, 15, 0, 0, time.UTC)
 	data.CreatedTime = now.Add(1 * time.Minute)
-	_, err := rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbHandler.session)
+	_, err := rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbGateway.session)
 	data.CreatedTime = now.Add(2 * time.Minute)
-	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbHandler.session)
+	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbGateway.session)
 	data.CreatedTime = now.Add(3 * time.Minute)
-	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbHandler.session)
+	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbGateway.session)
 	data.CreatedTime = now.Add(4 * time.Minute)
-	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbHandler.session)
+	_, err = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbGateway.session)
 	assert.NoError(t, err)
 
 	dataInDB := []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(3*time.Minute), 2, map[string][]string{})
+	err = dbGateway.GetPartOfTable(&dataInDB, now.Add(3*time.Minute), 2, map[string][]string{})
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(4*time.Minute), 4, map[string][]string{})
+	err = dbGateway.GetPartOfTable(&dataInDB, now.Add(4*time.Minute), 4, map[string][]string{})
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(5*time.Minute), 10, map[string][]string{})
+	err = dbGateway.GetPartOfTable(&dataInDB, now.Add(5*time.Minute), 10, map[string][]string{})
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(dataInDB))
 
 	dataInDB = []*DataStruct{}
-	err = dbHandler.GetPartOfTable(&dataInDB, now.Add(1*time.Minute), 10, map[string][]string{})
+	err = dbGateway.GetPartOfTable(&dataInDB, now.Add(1*time.Minute), 10, map[string][]string{})
 	assert.Equal(t, 0, len(dataInDB))
 
 	// Error
 	panicFunc := func() {
-		dbHandler.GetPartOfTable(nil, now.Add(5*time.Minute), 1, map[string][]string{})
+		dbGateway.GetPartOfTable(nil, now.Add(5*time.Minute), 1, map[string][]string{})
 	}
 	assert.Panics(t, panicFunc)
 
 	// Session close
 	session.Close()
-	err = dbHandler.GetPartOfTable(nil, now.Add(5*time.Minute), 1, map[string][]string{})
+	err = dbGateway.GetPartOfTable(nil, now.Add(5*time.Minute), 1, map[string][]string{})
 	assert.Error(t, err)
 }
 
@@ -308,7 +308,7 @@ func TestRdbHandler_Delete(t *testing.T) {
 
 	session := t_connect()
 	defer session.Close()
-	dbHandler := rdbGateway{
+	dbGateway := rdbGateway{
 		session:   session,
 		TableName: t_TB_NAME,
 	}
@@ -319,22 +319,22 @@ func TestRdbHandler_Delete(t *testing.T) {
 	now := time.Now()
 	data.CreatedTime = now
 
-	respW, _ := rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbHandler.session)
+	respW, _ := rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbGateway.session)
 	dataId1 := respW.GeneratedKeys[0]
 
 	// Normal case
-	err := dbHandler.Delete(dataId1)
+	err := dbGateway.Delete(dataId1)
 	assert.NoError(t, err)
-	resp, err := rdb.Table(t_TB_NAME).Get(dataId1).Run(dbHandler.session)
+	resp, err := rdb.Table(t_TB_NAME).Get(dataId1).Run(dbGateway.session)
 	assert.NoError(t, err)
 	defer resp.Close()
 	assert.True(t, resp.IsNil())
 
 	// Session close
-	respW, _ = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbHandler.session)
+	respW, _ = rdb.Table(t_TB_NAME).Insert(data).RunWrite(dbGateway.session)
 	dataId1 = respW.GeneratedKeys[0]
 
 	session.Close()
-	err = dbHandler.Delete(dataId1)
+	err = dbGateway.Delete(dataId1)
 	assert.Error(t, err)
 }

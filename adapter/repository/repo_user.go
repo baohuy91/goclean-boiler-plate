@@ -9,23 +9,18 @@ func NewUserRepo() usecase.UserRepo {
 	return &userRepoImpl{}
 }
 
-type User struct {
-	Id    string
-	Name  string
-	Email string
-	Pass  string
-	Salt  string
-	CommonModelImpl
+type userRepoImpl struct {
+	dbGateway DbGateway
 }
 
-type userRepoImpl struct{}
-
 func (r *userRepoImpl) Get(id string) (*domain.User, error) {
-	// TODO: call database
-	user := &domain.User{
-		Id: id,
+	model := &UserModel{}
+	err := r.dbGateway.Get(model, id)
+	if err != nil {
+		return nil, err
 	}
-	return user, nil
+
+	return toUser(model), nil
 }
 
 func (r *userRepoImpl) GetByEmail(email string) (*domain.User, error) {
@@ -39,12 +34,18 @@ func (r *userRepoImpl) GetByEmail(email string) (*domain.User, error) {
 
 func (r *userRepoImpl) Create(user domain.User) (string, error) {
 	// TODO: call database
-	userModel := &User{
+	userModel := &UserModel{
 		Id:    "123",
 		Name:  user.Name,
 		Email: user.Email,
-		Pass:  user.HashPass,
-		Salt:  user.Salt,
 	}
 	return userModel.Id, nil
+}
+
+func toUser(model *UserModel) *domain.User {
+	return &domain.User{
+		Id:    model.Id,
+		Email: model.Email,
+		Name:  model.Name,
+	}
 }
