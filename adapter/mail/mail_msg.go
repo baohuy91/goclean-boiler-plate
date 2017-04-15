@@ -13,6 +13,20 @@ type Mail interface {
 	ReferenceIds() []string
 }
 
+type MailBuilder interface {
+	Build() Mail
+}
+
+// Return a builder to build a mail object, and then give it to mail manager to be sent away
+func NewBuilder(mailContent string, toAddress string) MailBuilder {
+	return &mailBuilderImpl{
+		mail: &mailImpl{
+			content: mailContent,
+			toList:  []string{toAddress},
+		},
+	}
+}
+
 type mailImpl struct {
 	from         string
 	toList       []string
@@ -57,4 +71,12 @@ func (m mailImpl) InReplyTo() string {
 }
 func (m mailImpl) ReferenceIds() []string {
 	return m.referenceIds
+}
+
+type mailBuilderImpl struct {
+	mail *mailImpl
+}
+
+func (m *mailBuilderImpl) Build() Mail {
+	return *m.mail
 }

@@ -80,7 +80,7 @@ func TestMain(m *testing.M) {
 
 type DataStruct struct {
 	Data string `gorethink:"data"`
-	repository.BaseModelImpl
+	repository.CommonModelImpl
 }
 
 func TestRdbHandler_Create(t *testing.T) {
@@ -88,7 +88,7 @@ func TestRdbHandler_Create(t *testing.T) {
 
 	session := t_connect()
 	defer session.Close()
-	dbHandler := rdbHandler{
+	dbHandler := rdbGateway{
 		session:   session,
 		TableName: t_TB_NAME,
 	}
@@ -119,7 +119,7 @@ func TestRdbHandler_Get(t *testing.T) {
 
 	session := t_connect()
 	defer session.Close()
-	dbHandler := rdbHandler{
+	dbHandler := rdbGateway{
 		session:   session,
 		TableName: t_TB_NAME,
 	}
@@ -156,7 +156,7 @@ func TestRdbHandler_GetList(t *testing.T) {
 	t.Skip("Skip TestRdbHandler_GetList")
 
 	session := t_connect()
-	dbHandler := rdbHandler{
+	dbHandler := rdbGateway{
 		session:   session,
 		TableName: t_TB_NAME,
 	}
@@ -211,7 +211,7 @@ func TestRdbHandler_GetPartOfTable(t *testing.T) {
 
 	session := t_connect()
 	defer session.Close()
-	dbHandler := rdbHandler{
+	dbHandler := rdbGateway{
 		session:   session,
 		TableName: t_TB_NAME,
 	}
@@ -268,7 +268,7 @@ func TestRdbHandler_Update(t *testing.T) {
 
 	session := t_connect()
 	defer session.Close()
-	dbHandler := rdbHandler{
+	dbHandler := rdbGateway{
 		session:   session,
 		TableName: t_TB_NAME,
 	}
@@ -308,7 +308,7 @@ func TestRdbHandler_Delete(t *testing.T) {
 
 	session := t_connect()
 	defer session.Close()
-	dbHandler := rdbHandler{
+	dbHandler := rdbGateway{
 		session:   session,
 		TableName: t_TB_NAME,
 	}

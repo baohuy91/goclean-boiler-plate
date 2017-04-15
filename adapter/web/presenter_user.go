@@ -1,6 +1,6 @@
 package controller
 
-import "goclean/entity"
+import "goclean/domain"
 
 type User struct {
 	Id    string `json:"id"`
@@ -9,7 +9,7 @@ type User struct {
 }
 
 // Present user entity to json response
-func NewUser(ue *entity.User) *User {
+func NewUser(ue *domain.User) *User {
 	return &User{
 		Id:    ue.Id,
 		Name:  ue.Name,

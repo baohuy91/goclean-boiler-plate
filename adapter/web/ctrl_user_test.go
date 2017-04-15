@@ -3,7 +3,7 @@ package controller
 import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"goclean/entity"
+	"goclean/domain"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,8 +12,8 @@ import (
 func TestUserCtrlImpl_GetUser_WithExistUser_ExpectSuccess(t *testing.T) {
 	tUserCtrlImpl := &userCtrlImpl{
 		userUsecase: &userUseCaseMock{
-			getUserFunc: func() (*entity.User, error) {
-				return &entity.User{}, nil
+			getUserFunc: func() (*domain.User, error) {
+				return &domain.User{}, nil
 			},
 		},
 	}

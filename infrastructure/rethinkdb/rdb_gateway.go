@@ -8,13 +8,13 @@ import (
 	"time"
 )
 
-type rdbHandler struct {
+type rdbGateway struct {
 	session   *rdb.Session
 	TableName string
 }
 
 // Get single record for a table
-func (r rdbHandler) Get(receiverObjPtr repository.BaseModel, id string) error {
+func (r rdbGateway) Get(receiverObjPtr repository.CommonModel, id string) error {
 	resp, err := rdb.Table(r.TableName).Get(id).Run(r.session)
 	if err != nil {
 		return err
@@ -31,7 +31,7 @@ func (r rdbHandler) Get(receiverObjPtr repository.BaseModel, id string) error {
 
 // Create new object and return its id
 // Return either (id, err) or ("", nil)
-func (r rdbHandler) Create(dataObjPtr repository.BaseModel) (string, error) {
+func (r rdbGateway) Create(dataObjPtr repository.CommonModel) (string, error) {
 	now := time.Now()
 	dataObjPtr.SetLastUpdated(now)
 	dataObjPtr.SetCreatedTime(now)
@@ -52,7 +52,7 @@ func (r rdbHandler) Create(dataObjPtr repository.BaseModel) (string, error) {
 }
 
 // Get list of resource base on an index
-func (r rdbHandler) GetList(receiverObjs interface{}, index string, val interface{}) error {
+func (r rdbGateway) GetList(receiverObjs interface{}, index string, val interface{}) error {
 	resp, err := rdb.Table(r.TableName).
 		GetAllByIndex(index, val).
 		OrderBy(rdb.Desc("createdTime")).
@@ -71,7 +71,7 @@ func (r rdbHandler) GetList(receiverObjs interface{}, index string, val interfac
 }
 
 // Get a part of table (paging) with sort by createdTime
-func (r rdbHandler) GetPartOfTable(receiverObjs interface{}, timeIndex time.Time, size int, filterMap map[string][]string) error {
+func (r rdbGateway) GetPartOfTable(receiverObjs interface{}, timeIndex time.Time, size int, filterMap map[string][]string) error {
 	// Recursive func to generate filter condition
 	var termGenerator func(fs []string, k string) rdb.Term
 	termGenerator = func(fs []string, k string) rdb.Term {
@@ -106,7 +106,7 @@ func (r rdbHandler) GetPartOfTable(receiverObjs interface{}, timeIndex time.Time
 }
 
 // Update data by its id
-func (r rdbHandler) Update(receiverObjsPtr repository.BaseModel, id string) error {
+func (r rdbGateway) Update(receiverObjsPtr repository.CommonModel, id string) error {
 	receiverObjsPtr.SetLastUpdated(time.Now())
 	_, err := rdb.Table(r.TableName).Get(id).Update(receiverObjsPtr).RunWrite(r.session)
 	if err != nil {
@@ -117,7 +117,7 @@ func (r rdbHandler) Update(receiverObjsPtr repository.BaseModel, id string) erro
 }
 
 // Get single record for a table
-func (r rdbHandler) Delete(id string) error {
+func (r rdbGateway) Delete(id string) error {
 	_, err := rdb.Table(r.TableName).Get(id).Delete().RunWrite(r.session)
 	return err
 }
