@@ -3,6 +3,7 @@ package repository
 import (
 	"goclean/domain"
 	"goclean/usecase"
+	"time"
 )
 
 func NewUserRepo() usecase.UserRepo {
@@ -24,12 +25,14 @@ func (r *userRepoImpl) Get(id string) (*domain.User, error) {
 }
 
 func (r *userRepoImpl) GetByEmail(email string) (*domain.User, error) {
-	// TODO: call database
-	user := &domain.User{
-		Id:    "123",
-		Email: email,
+	models := []*UserModel{}
+	filter := map[string][]string{"email": {email}}
+	err := r.dbGateway.GetPartOfTable(&models, time.Now(), 1, filter)
+	if err != nil {
+		return nil, domain.NewRepoInternalErr(err)
 	}
-	return user, nil
+
+	return toUser(models[0]), nil
 }
 
 func (r *userRepoImpl) Create(user domain.User) (string, error) {

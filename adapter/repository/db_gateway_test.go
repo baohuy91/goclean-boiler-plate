@@ -1,6 +1,9 @@
 package repository
 
-import "time"
+import (
+	"reflect"
+	"time"
+)
 
 type MockDbGateway struct {
 	ModifiedParam1 interface{}
@@ -8,9 +11,29 @@ type MockDbGateway struct {
 	Result2        interface{}
 }
 
-func (m *MockDbGateway) Get(receiverObjPtr CommonModel, id string) error {
+func (m MockDbGateway) Get(receiverObjPtr CommonModel, id string) error {
 	if m.ModifiedParam1 != nil {
-		*receiverObjPtr.(*UserModel) = *m.ModifiedParam1.(*UserModel)
+		decodeVal(receiverObjPtr, m.ModifiedParam1)
+	}
+
+	if m.Result1 != nil {
+		return m.Result1.(error)
+	}
+
+	return nil
+}
+
+func (m MockDbGateway) Create(dataObjPtr CommonModel) (string, error) {
+	return m.Result1.(string), m.Result2.(error)
+}
+
+func (m MockDbGateway) GetList(receiverObjs interface{}, index string, val interface{}) error {
+	return m.Result1.(error)
+}
+
+func (m MockDbGateway) GetPartOfTable(receiverObjs interface{}, timeIndex time.Time, size int, filterMap map[string][]string) error {
+	if m.ModifiedParam1 != nil {
+		decodeVal(receiverObjs, m.ModifiedParam1)
 	}
 	if m.Result1 != nil {
 		return m.Result1.(error)
@@ -18,22 +41,15 @@ func (m *MockDbGateway) Get(receiverObjPtr CommonModel, id string) error {
 	return nil
 }
 
-func (m *MockDbGateway) Create(dataObjPtr CommonModel) (string, error) {
-	return m.Result1.(string), m.Result2.(error)
-}
-
-func (m *MockDbGateway) GetList(receiverObjs interface{}, index string, val interface{}) error {
+func (m MockDbGateway) Update(receiverObjsPtr CommonModel, id string) error {
 	return m.Result1.(error)
 }
 
-func (m *MockDbGateway) GetPartOfTable(receiverObjs interface{}, timeIndex time.Time, size int, filterMap map[string][]string) error {
+func (m MockDbGateway) Delete(id string) error {
 	return m.Result1.(error)
 }
 
-func (m *MockDbGateway) Update(receiverObjsPtr CommonModel, id string) error {
-	return m.Result1.(error)
-}
-
-func (m *MockDbGateway) Delete(id string) error {
-	return m.Result1.(error)
+func decodeVal(dstPtr interface{}, srcPtr interface{}) {
+	dstVal := reflect.ValueOf(dstPtr).Elem()
+	dstVal.Set(reflect.ValueOf(srcPtr).Elem())
 }

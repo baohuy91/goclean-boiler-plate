@@ -10,11 +10,10 @@ func init() {
 }
 
 func TestUserRepoImpl_Get_WithUserExist_ExpectData(t *testing.T) {
-	mockDbGateway := &MockDbGateway{
+	mockDbGateway := MockDbGateway{
 		ModifiedParam1: &UserModel{
 			Id: "12",
 		},
-		Result1: nil,
 	}
 	sut := userRepoImpl{dbGateway: mockDbGateway}
 
@@ -22,4 +21,17 @@ func TestUserRepoImpl_Get_WithUserExist_ExpectData(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, "12", user.Id)
+}
+
+func TestUserRepoImpl_GetByEmail_WithUserExist_ExpectData(t *testing.T) {
+	mockDbGateway := MockDbGateway{
+		ModifiedParam1: &[]*UserModel{{Id: "45"}},
+	}
+
+	sut := userRepoImpl{dbGateway: mockDbGateway}
+
+	user, err := sut.GetByEmail("")
+
+	assert.Nil(t, err)
+	assert.Equal(t, "45", user.Id)
 }
