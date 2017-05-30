@@ -2,20 +2,22 @@ package repository
 
 import (
 	"github.com/stretchr/testify/assert"
+	"goclean/domain"
 	"testing"
 )
 
-func init() {
+var sut userRepoImpl
 
+func init() {
+	sut = userRepoImpl{}
 }
 
 func TestUserRepoImpl_Get_WithUserExist_ExpectData(t *testing.T) {
-	mockDbGateway := MockDbGateway{
+	sut.dbGateway = MockDbGateway{
 		ModifiedParam1: &UserModel{
 			Id: "12",
 		},
 	}
-	sut := userRepoImpl{dbGateway: mockDbGateway}
 
 	user, err := sut.Get("")
 
@@ -24,14 +26,30 @@ func TestUserRepoImpl_Get_WithUserExist_ExpectData(t *testing.T) {
 }
 
 func TestUserRepoImpl_GetByEmail_WithUserExist_ExpectData(t *testing.T) {
-	mockDbGateway := MockDbGateway{
+	sut.dbGateway = MockDbGateway{
 		ModifiedParam1: &[]*UserModel{{Id: "45"}},
 	}
-
-	sut := userRepoImpl{dbGateway: mockDbGateway}
 
 	user, err := sut.GetByEmail("")
 
 	assert.Nil(t, err)
 	assert.Equal(t, "45", user.Id)
+}
+
+func TestUserRepoImpl_GetByEmail_WithNoUserNoError_ExpectNil(t *testing.T) {
+	sut.dbGateway = MockDbGateway{ModifiedParam1: &[]*UserModel{}}
+
+	user, err := sut.GetByEmail("")
+
+	assert.Nil(t, user)
+	assert.Nil(t, err)
+}
+
+func TestUserRepoImpl_Create_WithCreatedId_ExpectId(t *testing.T) {
+	sut.dbGateway = MockDbGateway{Result1: "12"}
+
+	id, err := sut.Create(domain.User{})
+
+	assert.Equal(t, "12", id)
+	assert.Nil(t, err)
 }

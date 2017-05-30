@@ -24,7 +24,21 @@ func (m MockDbGateway) Get(receiverObjPtr CommonModel, id string) error {
 }
 
 func (m MockDbGateway) Create(dataObjPtr CommonModel) (string, error) {
-	return m.Result1.(string), m.Result2.(error)
+	var id string
+	var err error
+	if m.Result1 == nil {
+		id = ""
+	} else {
+		id = m.Result1.(string)
+	}
+
+	if m.Result2 == nil {
+		err = nil
+	} else {
+		err = m.Result2.(error)
+	}
+
+	return id, err
 }
 
 func (m MockDbGateway) GetList(receiverObjs interface{}, index string, val interface{}) error {
