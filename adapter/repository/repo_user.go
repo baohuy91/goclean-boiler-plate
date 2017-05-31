@@ -3,48 +3,68 @@ package repository
 import (
 	"goclean/domain"
 	"goclean/usecase"
+	"time"
 )
 
 func NewUserRepo() usecase.UserRepo {
 	return &userRepoImpl{}
 }
 
-type User struct {
-	Id    string
-	Name  string
-	Email string
-	Pass  string
-	Salt  string
-	CommonModelImpl
+type userRepoImpl struct {
+	dbGateway DbGateway
 }
 
-type userRepoImpl struct{}
-
 func (r *userRepoImpl) Get(id string) (*domain.User, error) {
-	// TODO: call database
-	user := &domain.User{
-		Id: id,
+	model := &UserModel{}
+	err := r.dbGateway.Get(model, id)
+	if err != nil {
+		return nil, domain.NewRepoInternalErr(err)
 	}
-	return user, nil
+
+	return toUser(model), err
 }
 
 func (r *userRepoImpl) GetByEmail(email string) (*domain.User, error) {
-	// TODO: call database
-	user := &domain.User{
-		Id:    "123",
-		Email: email,
+	models := []*UserModel{}
+	filter := map[string][]string{"email": {email}}
+	err := r.dbGateway.GetPartOfTable(&models, time.Now(), 1, filter)
+	if err != nil {
+		return nil, domain.NewRepoInternalErr(err)
 	}
-	return user, nil
+
+	if len(models) == 0 {
+		return nil, nil
+	}
+
+	return toUser(models[0]), nil
 }
 
 func (r *userRepoImpl) Create(user domain.User) (string, error) {
-	// TODO: call database
-	userModel := &User{
-		Id:    "123",
+	userModel := toUserModel(user)
+	id, err := r.dbGateway.Create(userModel)
+	if err != nil {
+		return "", domain.NewRepoInternalErr(err)
+	}
+
+	return id, nil
+}
+
+func toUser(model *UserModel) *domain.User {
+	if model == nil {
+		return nil
+	}
+
+	return &domain.User{
+		Id:    model.Id,
+		Email: model.Email,
+		Name:  model.Name,
+	}
+}
+
+func toUserModel(user domain.User) *UserModel {
+	return &UserModel{
+		Id:    "",
 		Name:  user.Name,
 		Email: user.Email,
-		Pass:  user.HashPass,
-		Salt:  user.Salt,
 	}
-	return userModel.Id, nil
 }

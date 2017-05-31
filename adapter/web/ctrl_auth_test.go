@@ -89,16 +89,16 @@ func TestAuthCtrlImpl_LoginByEmail_WithExistUser_ExpectValidToken(t *testing.T) 
 }
 
 func TestHashPass(t *testing.T) {
-	hashedPass1, _ := HashPass("huy123", "So2gdJTHvaY07mT4bQVj6610r00nRYHus6MZ0//PeG0=", "abc")
+	hashedPass1, _ := HashPass("huy123", "So2gdJTHvaY07mT4bQVj6610r00nRYHus6MZ0//PeG0=")
 
-	assert.Equal(t, "atnPKUDYMV/MRIUnjVJVPP/pah4omufxIbFm8H0BrLI=", hashedPass1)
+	assert.Equal(t, "4xsF5RqUaRBUKnBGPQeMei8vGN2OJLyqQaToGXHhJU0=", hashedPass1)
 }
 
 func TestValidatePass(t *testing.T) {
 	salt := GenSalt()
 
-	hashedPass, _ := HashPass("huy123", salt, "abc")
+	hashedPass, _ := HashPass("huy123", salt)
 
-	assert.True(t, ValidatePass("huy123", hashedPass, salt, "abc"))
-	assert.False(t, ValidatePass("huy", hashedPass, salt, "abc"))
+	assert.True(t, ValidatePass("huy123", hashedPass, salt))
+	assert.False(t, ValidatePass("huy", hashedPass, salt))
 }

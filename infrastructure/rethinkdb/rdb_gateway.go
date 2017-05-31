@@ -13,6 +13,13 @@ type rdbGateway struct {
 	TableName string
 }
 
+func NewRdbGateway(session *rdb.Session, tableName string) repository.DbGateway {
+	return rdbGateway{
+		session:   session,
+		TableName: tableName,
+	}
+}
+
 // Get single record for a table
 func (r rdbGateway) Get(receiverObjPtr repository.CommonModel, id string) error {
 	resp, err := rdb.Table(r.TableName).Get(id).Run(r.session)
