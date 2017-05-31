@@ -1,20 +1,23 @@
 package web
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"goclean/adapter/repository"
 	"goclean/usecase"
+	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/sha3"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"time"
 )
 
-const AUTH_SALT = "xKuma-Stackx"
 const PW_SALT_SIZE = 32
+const HASHPASS_LEN = 32
+const HASH_ITERATION_COUNT = 4096
 const DEFAULT_TOKEN_EXPIRED_MINUTE = 30 * 24 * 60 // 30 days
 const RESET_TOKEN_EXPIRED_MINUTE = 30             // 30 minutes
 const RESET_PASS_AUD = "resetPassAud"
@@ -94,9 +97,8 @@ func (c *authCtrlImpl) RegisterByMail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Generate HashedPass & Salt
 	salt := GenSalt()
-	hashedPass, err := HashPass(req.pass, salt, AUTH_SALT)
+	hashedPass, err := HashPass(req.pass, salt)
 	if err != nil {
 		ResponseError(w, http.StatusInternalServerError, err)
 		return
@@ -151,7 +153,7 @@ func (c *authCtrlImpl) LoginByEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate pass
-	if ValidatePass(req.pass, auth.HashedPass, auth.Salt, AUTH_SALT) {
+	if ValidatePass(req.pass, auth.HashedPass, auth.Salt) {
 		ResponseError(w, http.StatusBadRequest, errors.New("Incorrect username & pass"))
 		return
 	}
@@ -268,7 +270,7 @@ func (c *authCtrlImpl) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Hash new pass
-	auth.HashedPass, err = HashPass(req.pass, auth.Salt, AUTH_SALT)
+	auth.HashedPass, err = HashPass(req.pass, auth.Salt)
 	if err != nil {
 		ResponseError(w, http.StatusInternalServerError, err)
 		return
@@ -288,32 +290,27 @@ func (c *authCtrlImpl) ResetPassword(w http.ResponseWriter, r *http.Request) {
 // salt is response as a hex number
 func GenSalt() string {
 	b := make([]byte, PW_SALT_SIZE)
-	rand.Read(b) // err is always nil
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(fmt.Errorf("Random generate salt failed: %v", err))
+	}
+
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func HashPass(pass string, salt string, authSalt string) (string, error) {
-	k, err := base64.StdEncoding.DecodeString(salt)
+// TODO: use byte array instead of string for pass to avoid security if memory leak
+func HashPass(plainPass string, saltStr string) (string, error) {
+	salt, err := base64.StdEncoding.DecodeString(saltStr)
 	if err != nil {
 		return "", err
 	}
-	buf := []byte(pass)
-	// A MAC with 32 bytes of output has 256-bit security strength -- if you use at least a 32-byte-long key.
-	h := make([]byte, 32)
-	d := sha3.NewShake256()
-	// Write the key into the hash.
-	combinedSalt := append(k, []byte(authSalt)...)
-	d.Write(combinedSalt)
-	// Now write the data.
-	d.Write(buf)
-	// Read 32 bytes of output from the hash into h.
-	d.Read(h)
+	hashedPass := pbkdf2.Key([]byte(plainPass), salt, HASH_ITERATION_COUNT, HASHPASS_LEN, sha3.New256)
 
-	return base64.StdEncoding.EncodeToString(h), nil
+	return base64.StdEncoding.EncodeToString(hashedPass), nil
 }
 
-func ValidatePass(pass string, hashedPass string, salt string, authSalt string) bool {
-	encoded, err := HashPass(pass, salt, authSalt)
+func ValidatePass(pass string, hashedPass string, salt string) bool {
+	encoded, err := HashPass(pass, salt)
 	if err != nil {
 		return false
 	}

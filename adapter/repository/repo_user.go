@@ -43,7 +43,7 @@ func (r *userRepoImpl) Create(user domain.User) (string, error) {
 	userModel := toUserModel(user)
 	id, err := r.dbGateway.Create(userModel)
 	if err != nil {
-		return nil, domain.NewRepoInternalErr(err)
+		return "", domain.NewRepoInternalErr(err)
 	}
 
 	return id, nil
